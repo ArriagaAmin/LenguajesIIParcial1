@@ -28,6 +28,8 @@ PARSE a + b * c
 PARSE n n
 PARSE
 PREC a = b
+PREC a = a
+PREC b = a
 PREC b > c
 PREC d < c 
 PREC d > e 

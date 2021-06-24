@@ -16,13 +16,10 @@ class OperatorGrammar:
     self.precedences = {}
     self.equiv_graph = {}
     self.equivs = {}
-    self.f_nodes = {}
-    self.g_nodes = {}
+    self.equivs_reverse = {}
+    self.nodes = {}
     self.f = {}
     self.g = {}
-    # source_nodes guarda los nodos fuente, cuyo grado interno es 0
-    self.source_nodes_f = set()
-    self.source_nodes_g = set()
     # Verificar si se realizo build
     self.builded = False
 
@@ -367,27 +364,28 @@ class OperatorGrammar:
           f'y \033[1;3m{right}\033[0m.'
         )
         self.precedences[left].pop(right)
-    if left in self.equiv_graph:
-      if right in self.equiv_graph[left]:
+    if (left, True) in self.equiv_graph:
+      if (right, False) in self.equiv_graph[(left, True)]:
         print(
           '\033[1;35mWarning:\033[0m Ya se definio la relacion de precedencia ' + \
           f'\033[1;3m=\033[0m entre \033[1;3m{left}\033[0m y \033[1;3m{right}\033[0m.'
         )
-        self.equiv_graph[left].discard(right)
-        self.equiv_graph[right].discard(left)
+        self.equiv_graph[(left, True)].discard((right, False))
+        self.equiv_graph[(right, False)].discard((left, True))
 
   
     # Si el operador es =, agregamos a right y left a la misma clase de equivalencia.
     if op == '=':
 
-      # Agregamos la relacion de equivalencia right -> left
-      if right in self.equiv_graph: self.equiv_graph[right].add(left)
-      else: self.equiv_graph[right] = set([left])
-      # Agregamos la relacion de equivalencia left -> right
-      if left in self.equiv_graph: self.equiv_graph[left].add(right)
-      else: self.equiv_graph[left] = set([right])
+      # Agregamos la relacion de equivalencia f_left -> g_right
+      if (left, True) in self.equiv_graph: self.equiv_graph[(left, True)].add((right, False))
+      else: self.equiv_graph[(left, True)] = set([(right, False)])
+      # Agregamos la relacion de equivalencia g_right -> f_left
+      if (right, False) in self.equiv_graph: self.equiv_graph[(right, False)].add((left, True))
+      else: self.equiv_graph[(right, False)] = set([(left, True)])
 
     else: 
+
       # Establecemos la precedencia
       if left in self.precedences: self.precedences[left][right] = op
       else: self.precedences[left] = {right: op}
@@ -395,34 +393,37 @@ class OperatorGrammar:
     self.Sigma.add(left)
     self.Sigma.add(right)
 
-  def dfs(self, symbol: str, visited: Set[str], count: int) -> Set[str]:
+  def dfs(self, symbol: Tuple[str, bool], visited: Set[Tuple[str, bool]], count: int) -> Set[str]:
     """
       Aplicamos DFS para crear la clases de equivalencia del simbolo.
 
       INPUTS:
-        symbol: str       ->  Simbolo (nodo) actual.
-        visited: Set[str] ->  Nodos ya visitados.
-        count: int        ->  Clase de equivalencia actual.
+        symbol: Tuple[str, bool]        ->  Simbolo (nodo) actual.
+        visited: Set[Tuple[str, bool]]  ->  Nodos ya visitados.
+        count: int                      ->  Clase de equivalencia actual.
       OUTPUT:
         Set[str]  ->  Nodos visitados luego de esta iteracion.
 
       >>> OG = OperatorGrammar()
       >>> OG.set_precedence("a", "=", "b")
-      >>> OG.set_precedence("b", "=", "c")
-      >>> OG.set_precedence("b", "=", "d")
+      >>> OG.set_precedence("c", "=", "b")
       >>> OG.set_precedence("c", "=", "d")
-      >>> OG.set_precedence("d", "=", "e")
+      >>> OG.set_precedence("d", "=", "d")
+      >>> OG.set_precedence("d", "=", "a")
 
-      >>> s = list(OG.dfs("a", set(), 0))
+      >>> s = list(OG.dfs(("a", True), set(), 0))
       >>> s.sort()
       >>> s
-      ['a', 'b', 'c', 'd', 'e']
+      [('a', False), ('a', True), ('b', False), ('c', True), ('d', False), ('d', True)]
 
       >>> [(t, OG.equivs[t]) for t in s]
-      [('a', 0), ('b', 0), ('c', 0), ('d', 0), ('e', 0)]
+      [(('a', False), 0), (('a', True), 0), (('b', False), 0), (('c', True), 0), (('d', False), 0), (('d', True), 0)]
     """
 
     self.equivs[symbol] = count
+    if count in self.equivs_reverse: self.equivs_reverse[count].add(symbol)
+    else: self.equivs_reverse[count] = set([symbol])
+
     visited.add(symbol) 
 
     # Si el simbolo no tiene ninguna relacion de equivalencia, entonces el es
@@ -441,36 +442,43 @@ class OperatorGrammar:
 
       >>> OG = OperatorGrammar()
       >>> OG.set_precedence("a", "=", "b")
-      >>> OG.set_precedence("b", "=", "c")
-      >>> OG.set_precedence("f", "=", "e")
-      >>> OG.set_precedence("g", "=", "h")
-      >>> OG.set_precedence("i", "=", "h")
+      >>> OG.set_precedence("c", "=", "b")
+      >>> OG.set_precedence("e", "=", "d")
+      >>> OG.set_precedence("d", "=", "d")
+      >>> OG.set_precedence("f", "=", "a")
       >>> OG.make_equiv_graph()
 
-      >>> OG.equivs["$"] != OG.equivs["a"]
-      True
-      >>> (OG.equivs["a"] == OG.equivs["b"]) and (OG.equivs["b"] == OG.equivs["c"])
-      True
-      >>> OG.equivs["c"] != OG.equivs["e"]
-      True
-      >>> OG.equivs["e"] == OG.equivs["f"]
-      True
-      >>> OG.equivs["f"] != OG.equivs["g"]
-      True
-      >>> (OG.equivs["g"] == OG.equivs["h"]) and (OG.equivs["h"] == OG.equivs["i"])
-      True
-    """
+      >>> s = list(OG.equivs)
+      >>> s.sort()
 
-    # Limpiamos equivs por si guardaba valores anteriores
-    self.equivs = {}
+      >>> for e in s:
+      ...   if OG.equivs[e] == OG.equivs[('e', True)]: print(e)
+      ('d', False)
+      ('d', True)
+      ('e', True)
+
+      >>> for e in s:
+      ...   if OG.equivs[e] == OG.equivs[('b', False)]: print(e)
+      ('a', True)
+      ('b', False)
+      ('c', True)
+
+      >>> for e in s:
+      ...   if OG.equivs[e] == OG.equivs[('a', False)]: print(e)
+      ('a', False)
+      ('f', True)
+    """
 
     visited = set()
     count = 0
 
     # Aplicamos DFS para enumerar las clases de equivalencia
     for symbol in self.Sigma:
-      if not symbol in visited:
-        visited = self.dfs(symbol, visited, count)
+      if not (symbol, True) in visited:
+        visited = self.dfs((symbol, True), visited, count)
+        count += 1
+      if not (symbol, False) in visited:
+        visited = self.dfs((symbol, False), visited, count)
         count += 1
 
   def make_precedence_graph(self):
@@ -487,24 +495,12 @@ class OperatorGrammar:
       >>> OG.set_precedence("f", ">", "q")
       >>> OG.make_precedence_graph()
 
-      >>> OG.g_nodes[OG.equivs["c"]] == set([OG.equivs["f"]])
-      True
-      >>> OG.f_nodes[OG.equivs["f"]] == set([OG.equivs["z"], OG.equivs["q"]])
+      >>> OG.nodes[OG.equivs[('f', True)]] == set([OG.equivs[('z', False)], OG.equivs[('q', False)]])
       True
     """
 
     # Creamos las clases de equivalencia
     self.make_equiv_graph()
-
-    # Limpiamos f_nodes, g_nodes y source_nodes por si guardan valores anteriores
-    self.f_nodes = {}
-    self.g_nodes = {}
-    self.source_nodes_f = set()
-    self.source_nodes_g = set()
-
-    for node in self.equivs: 
-      self.source_nodes_f.add(self.equivs[node])
-      self.source_nodes_g.add(self.equivs[node])
 
     # Creamos las relaciones de las clases de equivalencia
     for left in self.Sigma:
@@ -514,21 +510,17 @@ class OperatorGrammar:
         
         # Si left < right, entonces  [g_right] -> [f_left] 
         if self.precedences[left][right] == '<':
-          if self.equivs[right] in self.g_nodes: 
-            self.g_nodes[self.equivs[right]].add(self.equivs[left])
+          if self.equivs[(right, False)] in self.nodes: 
+            self.nodes[self.equivs[(right, False)]].add(self.equivs[(left, True)])
           else: 
-            self.g_nodes[self.equivs[right]] = set([self.equivs[left]])
-
-          self.source_nodes_f.discard(self.equivs[left])
+            self.nodes[self.equivs[(right, False)]] = set([self.equivs[(left, True)]])
 
         # En caso contrario (si es >), entonces  [f_left] -> [g_right]
         else:
-          if self.equivs[left] in self.f_nodes: 
-            self.f_nodes[self.equivs[left]].add(self.equivs[right])
+          if self.equivs[(left, True)] in self.nodes: 
+            self.nodes[self.equivs[(left, True)]].add(self.equivs[(right, False)])
           else: 
-            self.f_nodes[self.equivs[left]] = set([self.equivs[right]])
-
-          self.source_nodes_g.discard(self.equivs[right])
+            self.nodes[self.equivs[(left, True)]] = set([self.equivs[(right, False)]])
 
   def precedences_error(self, path: List[Tuple[int, bool]]):
     """
@@ -540,22 +532,19 @@ class OperatorGrammar:
         break 
 
     error = "Ha ocurrido un ciclo en las precedencias.\n" + \
-      "A continuacion reportaremos las clases de equivalencias relacionada:\n\n"
-
-    # Agrupamos los simbolos de la misma clase
-    equiv_classes = [set() for _ in range(len(self.equivs))]
-    for s in self.Sigma:
-      equiv_classes[self.equivs[s]].add(s)
+      "A continuacion reportaremos las clases de equivalencias relacionadas.\n" + \
+      "Si aparece un simbolo \033[1;3m(s, b)\033[0m, \033[1;3mb\033[0m indica si " + \
+      "es un f-nodo en caso de ser True, o un g-nodo en caso contrario.\n\n"
 
     # Creamos un string que representa el ciclo
     for i in range(index, len(path)-1):
-      error += str(equiv_classes[path[i][0]]) + " -> "
-    error += str(equiv_classes[path[-1][0]])
+      error += str(self.equivs_reverse[path[i]]) + " -> "
+    error += str(self.equivs_reverse[path[-1]])
 
     # Reportamos el error
     raise Exception(error)
 
-  def get_max_path(self, path: List[Tuple[int, bool]], path_set: Set[Tuple[int, bool]]) -> int:
+  def get_max_path(self, path: List[int], path_set: Set[int]) -> int:
     """
       Obtiene el maximo camino desde un simbolo (nodo) dado el grafo de equivalencias.
 
@@ -580,63 +569,45 @@ class OperatorGrammar:
       >>> OG.set_precedence("$", "<", "*")
 
       >>> OG.make_precedence_graph()
-      >>> OG.get_max_path([(OG.equivs["i"], False)], set([(OG.equivs["i"], False)]))
+      >>> OG.get_max_path([OG.equivs[("i", False)]], set([OG.equivs[("i", False)]]))
       5
     """
  
-    node = path[-1][0]
-    is_f = path[-1][1]
+    node = path[-1]
+
+    symbol = list(self.equivs_reverse[node])[0]
 
     # Si ya calculamos el maximo camino, lo retornamos.
-    if is_f and node in self.f: return self.f[node] 
-    if not is_f and node in self.g: return self.g[node]
+    if symbol[1] and symbol[0] in self.f: return self.f[symbol[0]] 
+    if not symbol[1] and symbol[0] in self.g: return self.g[symbol[0]]
 
     # Obtenemos el maximo valor de los hijos.
     max_value = 0
 
-    if is_f:
-      # Si no tiene nodos hijos, entonces su valor es 0
-      if not node in self.f_nodes:
-        self.f[node] = 0
-        return 0 
+    # Si no tiene nodos hijos, entonces su valor es 0
+    if not node in self.nodes:
+      for s in self.equivs_reverse[node]:
+        if s[1]: self.f[s[0]] = 0
+        else: self.g[s[0]] = 0
+      return 0 
 
-      # Por cada hijo del nodo actual.
-      for g_node in self.f_nodes[node]:
+    # Por cada hijo del nodo actual.
+    for child in self.nodes[node]:
 
-        # Si el hijo ya esta en el camino actual, entonces hay un ciclo
-        if (g_node, False) in path_set: 
-          self.precedences_error(path + [(g_node, False)])
+      # Si el hijo ya esta en el camino actual, entonces hay un ciclo
+      if child in path_set: 
+        self.precedences_error(path + [child])
 
-        path.append((g_node, False))
-        path_set.add((g_node, False))
-        max_value = max(max_value, self.get_max_path(path, path_set))
-        path_set.discard((g_node, False))
-        path.pop()
+      path.append(child)
+      path_set.add(child)
+      max_value = max(max_value, self.get_max_path(path, path_set))
+      path_set.discard(child)
+      path.pop()
 
-      self.f[node] = max_value + 1
-      return max_value + 1
-
-    else:
-      # Si no tiene nodos hijos, entonces su valor es 0
-      if not node in self.g_nodes:
-        self.g[node] = 0
-        return 0 
-
-      # Por cada hijo del nodo actual.
-      for f_node in self.g_nodes[node]:
-
-        # Si el hijo ya esta en el camino actual, entonces hay un ciclo
-        if (f_node, True) in path_set: 
-          self.precedences_error(path + [(f_node, True)])
-
-        path.append((f_node, True))
-        path_set.add((f_node, True))
-        max_value = max(max_value, self.get_max_path(path, path_set))
-        path_set.discard((f_node, True))
-        path.pop()
-
-      self.g[node] = max_value + 1
-      return max_value + 1
+    for s in self.equivs_reverse[node]:
+      if s[1]: self.f[s[0]] = max_value + 1
+      else: self.g[s[0]] = max_value + 1
+    return max_value + 1
 
   def make_precedence_functions(self):
     """
@@ -665,19 +636,21 @@ class OperatorGrammar:
       >>> OG.make_precedence_functions()
 
       >>> for s in ["$", "+", "*", "i"]:
-      ...   print("f(" + s + ") = ", OG.f[OG.equivs[s]])
+      ...   print("f(" + s + ") = ", OG.f[s])
       f($) =  0
       f(+) =  2
       f(*) =  4
       f(i) =  4
       >>> for s in ["$", "+", "*", "i"]:
-      ...   print("g(" + s + ") = ", OG.g[OG.equivs[s]])
+      ...   print("g(" + s + ") = ", OG.g[s])
       g($) =  0
       g(+) =  1
       g(*) =  3
       g(i) =  5
 
       >>> OG.set_precedence("a", "=", "b")
+      >>> OG.set_precedence("b", "=", "a")
+      >>> OG.set_precedence("a", "=", "a")
       >>> OG.set_precedence("d", "<", "c")
       >>> OG.set_precedence("d", ">", "e")
       >>> OG.set_precedence("a", "<", "e")
@@ -696,28 +669,22 @@ class OperatorGrammar:
     self.f = {}
     self.g = {}
 
-    for f_node in self.source_nodes_f:
-      path = [(f_node, True)]
-      path_set = set([(f_node, True)])
-      self.get_max_path(path, path_set)
-
-    for g_node in self.source_nodes_g:
-      path = [(g_node, False)]
-      path_set = set([(g_node, False)])
-      self.get_max_path(path, path_set)
-
     for s in self.Sigma:
-      if not self.equivs[s] in self.f:
-        path = [(self.equivs[s], True)]
-        path_set = set([(self.equivs[s], True)])
-        self.get_max_path(path, path_set)
+      path = [self.equivs[(s, True)]]
+      path_set = set([self.equivs[(s, True)]])
+      self.get_max_path(path, path_set)
 
-      if not self.equivs[s] in self.g:
-        path = [(self.equivs[s], False)]
-        path_set = set([(self.equivs[s], False)])
-        self.get_max_path(path, path_set)
+      path = [self.equivs[(s, False)]]
+      path_set = set([self.equivs[(s, False)]])
+      self.get_max_path(path, path_set)
 
     self.builded = True
+
+    # Liberamos la memoria de los grafos de precedencia
+    self.equiv_graph.clear()
+    self.equivs.clear()
+    self.equivs_reverse.clear()
+    self.nodes.clear()
 
   def get_last_terminal(self, stack: List[str], upper: int) -> int:
     """
@@ -786,8 +753,8 @@ class OperatorGrammar:
       # Ignoramos los espacios
       if w[i] == " ": continue
 
-      if self.f[self.equivs[last_symbol]] < self.g[self.equivs[w[i]]]: output += " < "
-      elif self.f[self.equivs[last_symbol]] > self.g[self.equivs[w[i]]]: output += " > "
+      if self.f[last_symbol] < self.g[w[i]]: output += " < "
+      elif self.f[last_symbol] > self.g[w[i]]: output += " > "
       else: output += " = "
 
       last_symbol = w[i]
@@ -912,7 +879,7 @@ class OperatorGrammar:
           stack = ["$", self.P_ref[tuple(production)]]
           continue
 
-      if self.f[self.equivs[p]] <= self.g[self.equivs[e]]:
+      if self.f[p] <= self.g[e]:
         # Agregamos el elemento a la pila y obtenemos el siguiente elemento terminal
         self.print_step(stack, w, "Leer " + e + "", l)
         stack.append(e)
@@ -935,7 +902,7 @@ class OperatorGrammar:
         # Mientras sigamos leyendo un simbolo no terminal o el elemento del tope
         # de la pila tenga mayor precedencia que el elemento que sacamos
         while (not self.is_terminal(stack[-1], True)) or \
-            (self.f[self.equivs[stack[-1]]] >= self.g[self.equivs[x]]):
+            (self.f[stack[-1]] >= self.g[x]):
           
           rule.append(stack.pop())
           # Si el elemento es terminal, lo almacenamos en x 
@@ -1036,10 +1003,10 @@ def BUILD(OG: OperatorGrammar):
     Sigma = list(OG.Sigma)
     Sigma.sort()
     for s in Sigma:
-      print(f'  f({s}) = {OG.f[OG.equivs[s]]}')
+      print(f'  f({s}) = {OG.f[s]}')
     print('Los valores de g son:')
     for s in Sigma:
-      print(f'  g({s}) = {OG.g[OG.equivs[s]]}')
+      print(f'  g({s}) = {OG.g[s]}')
   except Exception as e:
     print("\033[1;31mError:\033[0m ", e)
 
@@ -1185,4 +1152,4 @@ def main(input = input):
 if __name__ == "__main__":
   import doctest
   doctest.testmod(verbose=False)
-  #main()
+  main()
