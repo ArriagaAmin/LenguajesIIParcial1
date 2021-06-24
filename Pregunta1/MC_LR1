@@ -1,0 +1,391 @@
+
+GRAMATICA:
+S  -> I
+I  -> try I catch I f inally I
+    | try I catch I
+    | I ; I
+    | instr
+
+
+CONCLICTOS:
+  Estado I8  con 1 conflicto  shift/reduce
+  Estado I12 con 1 conflicto  shift/reduce
+  Estado I15 con 1 conflicto  shift/reduce
+  Estado I20 con 1 conflicto  shift/reduce
+  Estado I23 con 1 conflicto  shift/reduce
+  Estado I24 con 1 conflicto  shift/reduce
+  Estado I29 con 2 conflictos shift/reduce
+  Estado I30 con 1 conflicto  shift/reduce
+  Estado I31 con 1 conflicto  shift/reduce
+  Estado I34 con 2 conflictos shift/reduce
+  Estado I35 con 1 conflicto  shift/reduce
+  Estado I37 con 1 conflicto  shift/reduce
+
+
+MAQUINA CARACTERISTICA LR(1):
+I0:
+    S -> . I                              {$}
+    I -> . try I catch I finally I        {$, ;}
+    I -> . try I catch I                  {$, ;}
+    I -> . I ; I                          {$, ;}
+    I -> . inst                           {$, ;}
+    __________________________________________
+    inst  ==>   I1 
+    I     ==>   I2 
+    try   ==>   I3 
+
+I1:
+    I -> inst .                           {$, ;}
+
+I2:
+    S -> I .                              {$}
+    I -> I . ; I                          {$, ;}
+    __________________________________________ 
+    ;    ==>    I4
+
+I3:
+    I -> try . I catch I finally I        {$, ;}
+    I -> try . I catch I                  {$, ;}
+    I -> . try I catch I finally I        {catch, ;}
+    I -> . try I catch I                  {catch, ;}
+    I -> . I ; I                          {catch, ;}
+    I -> . inst                           {catch, ;}
+    __________________________________________
+    I     ==>     I5
+    try   ==>     I6
+    inst  ==>     I7
+
+I4:
+    I -> I ; . I                          {$, ;}
+    I -> . try I catch I finally I        {$, ;}
+    I -> . try I catch I                  {$, ;}
+    I -> . I ; I                          {$, ;}
+    I -> . inst                           {$, ;}
+    __________________________________________
+    I     ==>     I8
+    try   ==>     I3
+    inst  ==>     I1
+
+I5:
+    I -> try I . catch I finally I        {$, ;}
+    I -> try I . catch I                  {$, ;}
+    I -> I . ; I                          {catch, ;}
+    __________________________________________
+    catch ==>     I9
+    ;     ==>     I10
+
+I6:
+    I -> try . I catch I finally I        {catch, ;}
+    I -> try . I catch I                  {catch, ;}
+    I -> . try I catch I finally I        {catch, ;}
+    I -> . try I catch I                  {catch, ;}
+    I -> . I ; I                          {catch, ;}
+    I -> . inst                           {catch, ;}
+    __________________________________________
+    I     ==>     I11
+    try   ==>     I6
+    inst  ==>     I7
+
+I7:
+    I -> inst .                           {catch, ;}
+
+I8:
+    I -> I ; I .                          {$, ;}
+    I -> I . ; I                          {$, ;}
+    __________________________________________
+    ;     ==>     I4  
+
+    #! Conflicto Shift ;   /   Reduce I -> I ; I
+    [default] Reduce I -> I ; I
+
+I9:
+    I -> try I catch . I finally I        {$, ;}
+    I -> try I catch . I                  {$, ;}
+    I -> . try I catch I finally I        {finally, ;, $}
+    I -> . try I catch I                  {finally, ;, $}
+    I -> . I ; I                          {finally, ;, $}
+    I -> . inst                           {finally, ;, $}
+    __________________________________________
+    I     ==>     I12
+    try   ==>     I13
+    inst  ==>     I14
+
+I10:
+    I -> I ; . I                          {catch, ;}
+    I -> . try I catch I finally I        {catch, ;}
+    I -> . try I catch I                  {catch, ;}
+    I -> . I ; I                          {catch, ;}
+    I -> . inst                           {catch, ;}
+    __________________________________________
+    I     ==>     I15
+    try   ==>     I6
+    inst  ==>     I7
+
+I11:
+    I -> try I . catch I finally I        {catch, ;}
+    I -> try I . catch I                  {catch, ;}
+    I -> I . ; I                          {catch, ;}
+    __________________________________________
+    catch ==>     I16
+    ;     ==>     I10
+
+I12:
+    I -> try I catch I . finally I        {$, ;}
+    I -> try I catch I .                  {$, ;}
+    I -> I . ; I                          {finally, ;, $}
+    __________________________________________
+    finally ==>   I17
+    ;       ==>   I18
+
+    #! Conflicto Shift ;   /   Reduce I -> try I catch I
+    [default] Shift ;
+
+I13:
+    I -> try . I catch I finally I        {finally, ;, $}
+    I -> try . I catch I                  {finally, ;, $}
+    I -> . try I catch I finally I        {catch, ;}
+    I -> . try I catch I                  {catch, ;}
+    I -> . I ; I                          {catch, ;}
+    I -> . inst                           {catch, ;}
+    __________________________________________
+    I     ==>     I19
+    try   ==>     I6
+    inst  ==>     I7
+
+I14:
+    I -> inst .                           {finally, ;, $}
+
+I15:
+    I -> I ; I .                          {catch, ;}
+    I -> I . ; I                          {catch, ;}
+    __________________________________________
+    ;     ==>     I10
+
+    #! Conflicto Shift ;   /   Reduce I -> I ; I
+    [default] Reduce I -> I ; I
+
+I16:
+    I -> try I catch . I finally I        {catch, ;}
+    I -> try I catch . I                  {catch, ;}
+    I -> . try I catch I finally I        {finally, ;, catch}
+    I -> . try I catch I                  {finally, ;, catch}
+    I -> . I ; I                          {finally, ;, catch}
+    I -> . inst                           {finally, ;, catch}
+    __________________________________________
+    I     ==>     I20
+    try   ==>     I21
+    inst  ==>     I22
+
+I17:
+    I -> try I catch I finally . I        {$, ;}
+    I -> . try I catch I finally I        {$, ;}
+    I -> . try I catch I                  {$, ;}
+    I -> . I ; I                          {$, ;}
+    I -> . inst                           {$, ;}
+    __________________________________________
+    I     ==>     I23
+    try   ==>     I3
+    inst  ==>     I1
+
+I18:
+    I -> I ; . I                          {finally, ;, $}
+    I -> . try I catch I finally I        {finally, ;, $}
+    I -> . try I catch I                  {finally, ;, $}
+    I -> . I ; I                          {finally, ;, $}
+    I -> . inst                           {finally, ;, $}
+    __________________________________________
+    I     ==>     I24
+    try   ==>     I13
+    inst  ==>     I14
+
+I19:
+    I -> try I . catch I finally I        {finally, ;, $}
+    I -> try I . catch I                  {finally, ;, $}
+    I -> I . ; I                          {catch, ;}
+    __________________________________________
+    catch ==>     I25
+    ;     ==>     I10
+
+I20:
+    I -> try I catch I . finally I        {catch, ;}
+    I -> try I catch I .                  {catch, ;}
+    I -> I . ; I                          {finally, ;, catch}
+    __________________________________________
+    finally ==>   I26
+    ;       ==>   I27
+
+    #! Conflicto Shift ;   /   Reduce I -> try I catch I
+    [default] Shift ;
+
+I21:
+    I -> try . I catch I finally I        {finally, ;, catch}
+    I -> try . I catch I                  {finally, ;, catch}
+    I -> . try I catch I finally I        {catch, ;}
+    I -> . try I catch I                  {catch, ;}
+    I -> . I ; I                          {catch, ;}
+    I -> . inst                           {catch, ;}
+    __________________________________________
+    I     ==>     I28
+    try   ==>     I6
+    inst  ==>     I7
+
+I22:
+    I -> inst .                           {finally, ;, catch}
+
+I23:
+    I -> try I catch I finally I .        {$, ;}
+    I -> I . ; I                          {$, ;}
+    __________________________________________
+    ;     ==>     I4
+
+    #! Conflicto Shift ;   /   Reduce I -> try I catch I finally I
+    [default] Reduce I -> try I catch I finally I
+
+I24:
+    I -> I ; I .                          {finally, ;, $}
+    I -> I . ; I                          {finally, ;, $}
+    __________________________________________
+    ;     ==>     I18
+
+    #! Conflicto Shift ;   /   Reduce I -> I ; I
+    [default] Reduce I -> I ; I
+
+I25:
+    I -> try I catch . I finally I        {finally, ;, $}
+    I -> try I catch . I                  {finally, ; $}
+    I -> . try I catch I finally I        {finally, ;, $}
+    I -> . try I catch I                  {finally, ;, $}
+    I -> . I ; I                          {finally, ;, $}
+    I -> . inst                           {finally, ;, $}
+    __________________________________________
+    I     ==>     I29
+    try   ==>     I13
+    inst  ==>     I14
+
+I26:
+    I -> try I catch I finally . I        {catch, ;}
+    I -> . try I catch I finally I        {catch, ;}
+    I -> . try I catch I                  {catch, ;}
+    I -> . I ; I                          {catch, ;}
+    I -> . inst                           {catch, ;}
+    __________________________________________
+    I     ==>     I30
+    try   ==>     I6
+    inst  ==>     I7
+
+I27:
+    I -> I ; . I                          {finally, ;, catch}
+    I -> . try I catch I finally I        {finally, ;, catch}
+    I -> . try I catch I                  {finally, ;, catch}
+    I -> . I ; I                          {finally, ;, catch}
+    I -> . inst                           {finally, ;, catch}
+    __________________________________________
+    I     ==>     I31
+    try   ==>     I21
+    inst  ==>     I22
+
+I28:
+    I -> try I . catch I finally I        {finally, ;, catch}
+    I -> try I . catch I                  {finally, ;, catch}
+    I -> I . ; I                          {catch, ;}
+    __________________________________________
+    catch ==>     I32
+    ;     ==>     I10
+
+I29:
+    I -> try I catch I . finally I        {finally, ;, $}
+    I -> try I catch I .                  {finally, ;, $}
+    I -> I . ; I                          {finally, ;, $}
+    __________________________________________
+    finally ==>   I33
+    ;       ==>   I18
+
+    #! Conflicto Shift ;   /   Reduce I -> try I catch I
+    [default] Shift ;
+
+    #! Conflicto Shift finally   /   Reduce I -> try I catch I
+    [default] Shift finally
+
+I30:
+    I -> try I catch I finally I .        {catch, ;}
+    I -> I . ; I                          {catch, ;}
+    __________________________________________
+    ;     ==>     I10
+
+    #! Conflicto Shift ;   /   Reduce I -> try I catch I finally I
+    [default] Reduce I -> try I catch I finally I
+
+I31:
+    I -> I ; I .                          {finally, ;, catch}
+    I -> I . ; I                          {finally, ;, catch}
+    __________________________________________
+    ;     ==>     I27
+
+    #! Conflicto Shift ;   /   Reduce I -> I ; I
+    [default] Reduce I -> I ; I
+
+I32:
+    I -> try I catch . I finally I        {finally, ;, catch}
+    I -> try I catch . I                  {finally, ;, catch}
+    I -> . try I catch I finally I        {finally, ;, catch}
+    I -> . try I catch I                  {finally, ;, catch}
+    I -> . I ; I                          {finally, ;, catch}
+    I -> . inst                           {finally, ;, catch}
+    __________________________________________
+    I     ==>     I34
+    try   ==>     I21
+    inst  ==>     I22
+
+I33:
+    I -> try I catch I finally . I        {finally, ;, $}
+    I -> . try I catch I finally I        {finally, ;, $}
+    I -> . try I catch I                  {finally, ;, $}
+    I -> . I ; I                          {finally, ;, $}
+    I -> . inst                           {finally, ;, $}
+    __________________________________________
+    I     ==>     I35
+    try   ==>     I13
+    inst  ==>     I14
+
+I34:
+    I -> try I catch I . finally I        {finally, ;, catch}
+    I -> try I catch I .                  {finally, ;, catch}
+    I -> I . ; I                          {finally, ;, catch}
+    __________________________________________
+    finally ==>    I36
+    ;       ==>    I27
+
+    #! Conflicto Shift ;   /   Reduce I -> try I catch I
+    [default] Shift ;
+
+    #! Conflicto Shift finally   /   Reduce I -> try I catch I
+    [default] Shift finally
+
+I35:
+    I -> try I catch I finally I .        {finally, ;, $}
+    I -> I . ; I                          {finally, ;, $}
+    __________________________________________
+    ;     ==>     I18
+
+    #! Conflicto Shift ;   /   Reduce I -> try I catch I finally I
+    [default] Reduce I -> try I catch I finally I
+
+I36:
+    I -> try I catch I finally . I        {finally, ;, catch}
+    I -> . try I catch I finally I        {finally, ;, catch}
+    I -> . try I catch I                  {finally, ;, catch}
+    I -> . I ; I                          {finally, ;, catch}
+    I -> . inst                           {finally, ;, catch}
+    __________________________________________
+    I     ==>     I37
+    try   ==>     I21
+    inst  ==>     I22
+
+I37:
+    I -> try I catch I finally I .        {finally, ;, catch}
+    I -> I . ; I                          {finally, ;, catch}
+    __________________________________________
+    ;     ==>     127
+
+    #! Conflicto Shift ;   /   Reduce I -> try I catch I finally I
+    [default] Reduce I -> try I catch I finally I
