@@ -875,7 +875,7 @@ class OperatorGrammar:
     # Pila de simbolos
     stack = ["$"]
     # Agregamos $ en los extremos de la entrada
-    w = "$" + w + "$"
+    w = "$" + w.replace(" ", "") + "$"
     l = 2 * len(w)
     print("PILA".ljust(l), "ENTRADA".ljust(int(2.5*l)), "ACCION")
 
@@ -968,16 +968,27 @@ class OperatorGrammar:
 def syntax_error():
   """
     Imprime un error de sintaxis y muestra la forma correcta de usarla.
+
+    >>> syntax_error()
+    \033[1;31mError:\033[0m Sintaxis invalida:
+    Ejecute 
+      \033[1mRULE\033[0m <\033[4mNO-TERMINAL\033[0m> [<\033[4mSIMBOLO\033[0m> ...]
+      \033[1mINIT\033[0m <\033[4mNO-TERMINAL\033[0m>
+      \033[1mPREC\033[0m <\033[4mNO-TERMINAL\033[0m> <\033[4mOPERATION\033[0m> <\033[4mNO-TERMINAL\033[0m>
+      \033[1mBUILD\033[0m
+      \033[1mPARSE\033[0m [<\033[4mSTRING\033[0m> ...]
+      \033[1mSALIR\033[0m
+    <BLANKLINE>
   """
   print(
     '\033[1;31mError:\033[0m Sintaxis invalida:\n' + \
     'Ejecute \n' + \
-    '\t\033[1mRULE\033[0m <\033[4mNO-TERMINAL\033[0m> [<\033[4mSIMBOLO\033[0m> ...]\n' + \
-    '\t\033[1mINIT\033[0m <\033[4mNO-TERMINAL\033[0m>\n' + \
-    '\t\033[1mPREC\033[0m <\033[4mNO-TERMINAL\033[0m> <\033[4mOPERATION\033[0m> <\033[4mNO-TERMINAL\033[0m>\n' + \
-    '\t\033[1mBUILD\033[0m\n' + \
-    '\t\033[1mPARSE\033[0m [<\033[4mSTRING\033[0m> ...]\n' + \
-    '\t\033[1mSALIR\033[0m\n'
+    '  \033[1mRULE\033[0m <\033[4mNO-TERMINAL\033[0m> [<\033[4mSIMBOLO\033[0m> ...]\n' + \
+    '  \033[1mINIT\033[0m <\033[4mNO-TERMINAL\033[0m>\n' + \
+    '  \033[1mPREC\033[0m <\033[4mNO-TERMINAL\033[0m> <\033[4mOPERATION\033[0m> <\033[4mNO-TERMINAL\033[0m>\n' + \
+    '  \033[1mBUILD\033[0m\n' + \
+    '  \033[1mPARSE\033[0m [<\033[4mSTRING\033[0m> ...]\n' + \
+    '  \033[1mSALIR\033[0m\n'
   )
 
 def RULE(command: str, OG: OperatorGrammar):
@@ -1022,21 +1033,136 @@ def BUILD(OG: OperatorGrammar):
     OG.make_precedence_functions()
     print('Analizador sintaction construido.')
     print('Los valores de f son:')
-    for s in OG.Sigma:
+    Sigma = list(OG.Sigma)
+    Sigma.sort()
+    for s in Sigma:
       print(f'  f({s}) = {OG.f[OG.equivs[s]]}')
     print('Los valores de g son:')
-    for s in OG.Sigma:
+    for s in Sigma:
       print(f'  g({s}) = {OG.g[OG.equivs[s]]}')
   except Exception as e:
     print("\033[1;31mError:\033[0m ", e)
 
 def PARSE(command: str, OG: OperatorGrammar):
+  if not OG.builded:
+    print("\033[1;31mError:\033[0m Aun no se ha construido el analizador sintactico.")
+    return
+
   try:
-    production = OG.make_rule(command[6:])
+    OG.parse(command[6:])
   except Exception as e:
     print("\033[1;31mError:\033[0m ", e)
 
 def main(input = input):
+  """
+    >>> index = [-1]
+    >>> def fake_input(ignore: str, index = index):
+    ...   r = [
+    ...     "RULE E E + E",
+    ...     "RULE E E + E",
+    ...     "RULE E E * E",
+    ...     "RULE E E E",
+    ...     "RULE E n",
+    ...     "INIT e",
+    ...     "INIT E",
+    ...     "PREC n > +",
+    ...     "PREC n > *",
+    ...     "PREC n > $",
+    ...     "PREC + < n",
+    ...     "PREC + > +",
+    ...     "PREC + < *",
+    ...     "PREC + > $",
+    ...     "PREC * < n",
+    ...     "PREC * > +",
+    ...     "PREC * > *",
+    ...     "PREC * > $",
+    ...     "PREC $ < n",
+    ...     "PREC $ < +",
+    ...     "PREC $ < *",
+    ...     "PARSE n + n * n",
+    ...     "BUILD",
+    ...     "PARSE n + n * n",
+    ...     "PARSE n + * n",
+    ...     "PARSE n",
+    ...     "PARSE a + b * c",
+    ...     "PARSE n n",
+    ...     "PARSE",
+    ...     "SALIR", 
+    ...   ]
+    ...   index[0] += 1
+    ...   return r[index[0]]
+
+    >>> main(fake_input)
+    Regla \033[1;3mE -> E + E \033[0m agregada a la gramatica.
+    Regla \033[1;3mE -> E + E \033[0m agregada a la gramatica.
+    Regla \033[1;3mE -> E * E \033[0m agregada a la gramatica.
+    \033[1;31mError:\033[0m  La regla contiene dos simbolos no-terminales \033[1;3mE\033[0m y \033[1;3mE\033[0m seguidos. 
+    Recuerde que una \033[3mGramatica de Operadores\033[0m no debe contener dos simbolos no-terminales seguidos.
+    Regla \033[1;3mE -> n \033[0m agregada a la gramatica.
+    \033[1;31mError:\033[0m  El simbolo \033[1;3me\033[0m es terminal. 
+    El simbolo inicial debe ser no-terminal.
+    Se establecio \033[1;3mE\033[0m como simbolo inicial de la gramatica.
+    Se establecio la relacion de precedencia \033[1;3mn > +\033[0m.
+    Se establecio la relacion de precedencia \033[1;3mn > *\033[0m.
+    Se establecio la relacion de precedencia \033[1;3mn > $\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m+ < n\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m+ > +\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m+ < *\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m+ > $\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m* < n\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m* > +\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m* > *\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m* > $\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m$ < n\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m$ < +\033[0m.
+    Se establecio la relacion de precedencia \033[1;3m$ < *\033[0m.
+    \033[1;31mError:\033[0m Aun no se ha construido el analizador sintactico.
+    Analizador sintaction construido.
+    Los valores de f son:
+      f($) = 0
+      f(*) = 4
+      f(+) = 2
+      f(n) = 4
+    Los valores de g son:
+      g($) = 0
+      g(*) = 3
+      g(+) = 1
+      g(n) = 5
+    PILA           ENTRADA                             ACCION
+    $              $ < n > + < n > * < n > $           Leer n
+    $ n            $ < n > + < n > * < n > $           Reducir:  E -> n 
+    $ E            $ < + < n > * < n > $               Leer +
+    $ E +          $ < + < n > * < n > $               Leer n
+    $ E + n        $ < + < n > * < n > $               Reducir:  E -> n 
+    $ E + E        $ < + < * < n > $                   Leer *
+    $ E + E *      $ < + < * < n > $                   Leer n
+    $ E + E * n    $ < + < * < n > $                   Reducir:  E -> n 
+    $ E + E * E    $ < + < * > $                       Reducir:  E -> E * E 
+    $ E + E        $ < + > $                           Reducir:  E -> E + E 
+    $ E            $ = $                               Aceptar
+    PILA         ENTRADA                        ACCION
+    $            $ < n > + < * < n > $          Leer n
+    $ n          $ < n > + < * < n > $          Reducir:  E -> n 
+    $ E          $ < + < * < n > $              Leer +
+    $ E +        $ < + < * < n > $              Leer *
+    $ E + *      $ < + < * < n > $              Leer n
+    $ E + * n    $ < + < * < n > $              Reducir:  E -> n 
+    $ E + * E    $ < + < * > $                  Rechazar. No se puede reducir * E 
+    PILA   ENTRADA         ACCION
+    $      $ < n > $       Leer n
+    $ n    $ < n > $       Reducir:  E -> n 
+    $ E    $ = $           Aceptar
+    PILA           ENTRADA                             ACCION
+    \033[1;31mError:\033[0m  El simbolo \033[1;3ma\033[0m no es parte de la gramatica.
+    PILA     ENTRADA              ACCION
+    $        $ < n < n > $        Leer n
+    $ n      $ < n < n > $        Leer n
+    $ n n    $ < n < n > $        Reducir:  E -> n 
+    $ n E    $ < n > $            Rechazar. No se puede reducir n E 
+    PILA ENTRADA    ACCION
+    $    $ = $      Rechazar. No se puede reducir ()
+    Hasta luego!
+  """
   OG = OperatorGrammar()
   while True:
     command = input("$> ")
@@ -1059,4 +1185,4 @@ def main(input = input):
 if __name__ == "__main__":
   import doctest
   doctest.testmod(verbose=False)
-  main()
+  #main()

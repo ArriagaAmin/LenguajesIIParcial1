@@ -1,0 +1,40 @@
+RULE E E + E
+RULE E E + E
+RULE E E * E
+RULE E E E
+RULE E n
+INIT e
+INIT E
+PREC n > +
+PREC n > *
+PREC n > $
+PREC + < n
+PREC + > +
+PREC + < *
+PREC + > $
+PREC * < n
+PREC * > +
+PREC * > *
+PREC * > $
+PREC $ < n
+PREC $ < +
+PREC $ < *
+PARSE n + n * n
+BUILD
+PARSE n + n * n
+PARSE n + * n
+PARSE n
+PARSE a + b * c
+PARSE n n
+PARSE
+PREC a = b
+PREC b > c
+PREC d < c 
+PREC d > e 
+PREC f < e 
+PREC f > h 
+PREC a < h 
+PREC d = x 
+PREC h = q
+BUILD
+SALIR
