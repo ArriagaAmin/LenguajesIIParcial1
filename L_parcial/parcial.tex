@@ -1,0 +1,384 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{bookman}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{anysize}
+\usepackage{multicol}
+\usepackage[pdftex=true,colorlinks=true,linkcolor=black,urlcolor=blue]{hyperref}
+
+\marginsize{1.5cm}{1.5cm}{1.5cm}{1.5cm}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\date{}
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\begin{document}
+
+% ===================================== MEMBRETE ===================================== %
+\begin{center}
+  \textsc {
+    Universidad Simón Bolívar \\[0cm]
+    Departamento de Computaci\'on y Tecnolog\'ia de la Informaci\'on \\[0cm]
+    CI4721 - Lenguajes de Programaci\'on II \\[0cm]
+    Trimestre Abril - Julio 2021 \\[0cm]
+    Prof. Ricardo Monascal \\[0cm]
+    Amin Arriaga 16-10072
+  }
+  \HRule \\[0.4cm]
+  {\Large \textbf{Examen I}} \\[0.2cm]
+  \textsc{(20 puntos)}
+  \HRule
+\end{center}
+
+    El repositorio de Github usado para este examen se encuentr\'a en 
+    \href{https://github.com/ArriagaAmin/LenguajesIIParcial1}{este link}.
+
+    \begin{enumerate}
+        \item \textit{(6 puntos)} Sea una gram\'atica \verb|EXCEP T = ({instr, ;, try, catch, f inally}, {I}, P, I)|, 
+        con \verb|P| definido de la siguiente manera:
+
+        \begin{verbatim}
+                        I  -> try I catch I finally I
+                            | try I catch I
+                            | I ; I
+                            | instr
+        \end{verbatim}
+        Esto representa instrucciones con bloques protegidos (\verb|try|) y manejadores de excepciones 
+        (\verb|catch|), que opcionalmente tienen una instrucci\'on que se ejecuta en cualquier caso, ya 
+        sea que ocurriera la excepci\'on o no (\verb|finally|). 
+
+        \begin{enumerate}
+            \item \textit{(3 puntos)} Aumente la gram\'atica con un nuevo s\'imbolo inicial no recursivo \verb|S|, 
+            construya la m\'aquina caracter\'istica \textit{LR(1)} y diga si existen conflictos en el mismo
+
+            \textbf{Respuesta:} Se coloc\'o la nueva gram\'atica, la m\'aquina caracter\'istica y sus conflictos 
+            en el siguiente \href{https://github.com/ArriagaAmin/LenguajesIIParcial1/blob/main/Pregunta1/MC_LR1}{archivo} 
+            del repositorio.\\
+
+            \item \textit{(1 punto)} Tome en consideraci\'on las siguientes reglas:
+            \begin{itemize}
+                \item \verb|;| asocia a la izquierda.
+                \item \verb|finally| se asocia al \verb|try| m\'as interno.
+                \item \verb|finally| tiene m\'as precedencia que \verb|;|.
+                \item \verb|catch| tiene m\'as precedencia que \verb|;|
+            \end{itemize}
+            En caso de haber conflictos en el aut\'omata de prefijos viables \textit{LR(1)}, diga c\'omo 
+            resolver\'a los conflictos (seleccionando una de las acciones que conforma dicho conflicto), 
+            de tal forma que las reglas anteriores sean satisfechas.
+
+            \textbf{Respuesta:} Los conflictos se resolvieron en el mismo
+            \href{https://github.com/ArriagaAmin/LenguajesIIParcial1/blob/main/Pregunta1/MC_LR1}{archivo} 
+            de la pregunta anterior.\\
+
+            \item \textit{(2 puntos)} A partir de las respuestas anteriores, construya la m\'aquina 
+            caracterı\'istica \textit{LALR(1)} y diga si existen conflictos en el mismo. En caso de 
+            existir, explique c\'omo los resolverı\'ia (seleccionando una de las acciones que conforma 
+            dicho conflicto), con las mismas reglas de la pregunta anterior.
+
+            \textbf{Respuesta:} Se coloc\'o la m\'aquina caracter\'istica, sus conflictos y la forma de 
+            resolverlos en el siguiente \href{https://github.com/ArriagaAmin/LenguajesIIParcial1/blob/main/Pregunta1/MC_LALR1}{archivo} 
+            del repositorio.\\
+        \end{enumerate}
+
+        \newpage
+
+        \item \textit{(5 puntos)} Considerando la misma gram\'atica de la pregunta anterior:
+        
+        \begin{enumerate}
+            \item \textit{(2 puntos)} Proponga una Relaci\'on de Precedencia de Operadores entre los 
+            s\'imbolos terminales de la gram\'atica que permita resolver los conflictos con la misma 
+            suposici\'on que en las preguntas anteriores. 
+            
+            \textbf{Respuesta:}
+            \begin{center}
+                \begin{tabular}{ | c | c | c | c | c | c | c |}
+                    \hline
+                    & \verb|try| & \verb|catch| & \verb|finally| & \verb|;| & \verb|instr| & \verb|$| \\ \hline
+                    \verb|try| & $<$ & $=$ & & & $<$ & \\ \hline
+                    \verb|catch| & $<$ & $>$ & $=$ & $<$ & $<$ & $>$ \\ \hline 
+                    \verb|finally| & $<$ & $>$ & $>$ & $>$ & $<$ & $>$ \\ \hline 
+                    \verb|;| & $<$ & & & $>$ & $<$ & $>$ \\ \hline 
+                    \verb|instr| & & $>$ & $>$ & $>$ & & $>$ \\ \hline 
+                    \verb|$| & $<$ & & & $<$ & $<$ & \\ \hline
+                \end{tabular}
+            \end{center}
+            \vspace*{1cm}
+
+            \item \textit{(1.5 puntos)} Use el reconocedor para reconocer la frase:
+            \begin{center}
+                \verb|instr ; try instr catch instr ; try instr catch instr f inally instr ; instr|
+            \end{center}
+
+            \textbf{Respuesta:}
+            Primero enumeramos las producciones
+
+            \begin{verbatim}
+             (0)    S  -> I $
+             (1)    I  -> try I catch I finally I
+             (2)        | try I catch I
+             (3)        | I ; I
+             (4)        | instr
+            \end{verbatim}
+
+            \begin{center}
+                \begin{tabular}{ | l | l | c |}
+                    \hline
+                    \textbf{ENTRADA} & \textbf{PILA} & \textbf{ACCI\'ON} \\ \hline
+
+                    \verb|instr ; try instr catch instr ; try instr | & \verb|$ I0| & \textsc{shift} \\
+                    \verb|catch instr finally instr ; instr $| & &  \\ 
+                    & & \\ \hline
+
+                    \verb|; try instr catch instr ; try instr catch| & \verb|$ I0 I1| & \textsc{reduce}\\
+                    \verb|instr finally instr ; instr $| & & \verb|(4)| \\ 
+                    & & \\ \hline
+
+                    \verb|; try instr catch instr ; try instr catch| & \verb|$ I0 I2| & \textsc{shift} \\
+                    \verb|instr finally instr ; instr $| & & \\ 
+                    & & \\ \hline
+
+                    \verb|try instr catch instr ; try instr catch| & \verb|$ I0 I2 I4| & \textsc{shift}\\
+                    \verb|instr finally instr ; instr $| & &  \\ 
+                    & & \\ \hline
+
+                    \verb|instr catch instr ; try instr catch instr| & \verb|$ I0 I2 I4 I3| & \textsc{shift} \\
+                    \verb|finally instr ; instr $| & &  \\ 
+                    & & \\ \hline
+
+                    \verb|catch instr ; try instr catch instr| & \verb|$ I0 I2 I4 I3 I1| & \textsc{reduce} \\
+                    \verb|finally instr ; instr $| & & \verb|(4)| \\ 
+                    & & \\ \hline
+
+                    \verb|catch instr ; try instr catch instr| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    \verb|finally instr ; instr $| & & \\ 
+                    & & \\ \hline
+
+                    \verb|instr ; try instr catch instr finally| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    \verb|instr ; instr $| & \verb|I7| & \\ 
+                    & & \\ \hline
+
+                    \verb|; try instr catch instr finally instr ;| & \verb|$ I0 I2 I4 I3 I5| & \textsc{reduce} \\
+                    \verb|instr $| & \verb|I7 I1| & \verb|(4)| \\ 
+                    & & \\ \hline
+
+                    \verb|; try instr catch instr finally instr ;| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    \verb|instr $| & \verb|I7 I8| & \\ 
+                    & & \\ \hline
+                \end{tabular}
+            \end{center}
+
+            \begin{center}
+                \begin{tabular}{ | l | l | c |}
+                    \hline
+                    \verb|try instr catch instr finally instr ;| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    \verb|instr $| & \verb|I7 I8 I4| & \\ 
+                    & & \\ \hline
+
+                    \verb|instr catch instr finally instr ; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    \verb|                                          | & \verb|I7 I8 I4 I3| & \\ 
+                    & & \\ \hline
+
+                    \verb|catch instr finally instr ; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{reduce} \\
+                    & \verb|I7 I8 I4 I3 I1| & \verb|(4)| \\ 
+                    & & \\ \hline
+
+                    \verb|catch instr finally instr ; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    & \verb|I7 I8 I4 I3 I5| & \\ 
+                    & & \\ \hline
+
+                    \verb|instr finally instr ; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    & \verb|I7 I8 I4 I3 I5 I7| & \\ 
+                    & & \\ \hline
+
+                    \verb|finally instr ; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{reduce} \\
+                    & \verb|I7 I8 I4 I3 I5 I7| & \verb|(4)| \\
+                    & \verb|I1| & \\ \hline
+
+                    \verb|finally instr ; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    & \verb|I7 I8 I4 I3 I5 I7| & \\
+                    & \verb|I8| & \\ \hline
+
+                    \verb|instr ; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    & \verb|I7 I8 I4 I3 I5 I7| & \\
+                    & \verb|I8 I9| & \\ \hline
+
+                    \verb|; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{reduce} \\
+                    & \verb|I7 I8 I4 I3 I5 I7| & \verb|(4)|\\
+                    & \verb|I8 I9 I1| & \\ \hline
+
+                    \verb|; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{reduce} \\
+                    & \verb|I7 I8 I4 I3 I5 I7| & \verb|(1)|\\
+                    & \verb|I8 I9 I10| & \\ \hline
+
+                    \verb|; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{reduce} \\
+                    & \verb|I7 I8 I4 I6| & \verb|(3)| \\
+                    & & \\ \hline
+
+                    \verb|; instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    & \verb|I7 I8| &  \\
+                    & & \\ \hline
+
+                    \verb|instr $| & \verb|$ I0 I2 I4 I3 I5| & \textsc{shift} \\
+                    & \verb|I7 I8 I4| &  \\
+                    & & \\ \hline
+
+                    \verb|$| & \verb|$ I0 I2 I4 I3 I5| & \textsc{reduce} \\
+                    & \verb|I7 I8 I4 I1| &  \verb|(4)|\\
+                    & & \\ \hline
+
+                    \verb|$| & \verb|$ I0 I2 I4 I3 I5| & \textsc{reduce} \\
+                    & \verb|I7 I8| &  \verb|(2)|\\
+                    & & \\ \hline
+
+                    \verb|$| & \verb|$ I0 I2 I4 I6| & \textsc{reduce} \\
+                    &  &  \verb|(3)|\\
+                    & & \\ \hline
+
+                    \verb|$| & \verb|$ I0 I2| & \textsc{shift} \\
+                    &  & \\
+                    & & \\ \hline
+
+                    & \verb|$ I0 I2 I11| & \textsc{accept} \\
+                    &  &  \\
+                    & & \\ \hline
+                \end{tabular}
+            \end{center}
+
+            \newpage
+
+            \item \textit{(1.5 puntos)} Calcule las funciones de precedencia \verb|f| y \verb|g| 
+            seg\'un el algoritmo estudiado en clase (o argumente por qu\'e dichas funciones no 
+            pueden ser construidas).
+
+            \textbf{Respuesta:} Representaremos el grafo colocando cada nodo (clase de equivalencia)
+            apuntando al conjunto de sus nodos sucesores:\\
+
+            \begin{center}
+                \begin{tabular}{ | l c l | }
+                    \hline
+                    \textsc{NODO}                   &                     & \textsc{SUCESORES} \\
+                    \hline
+                    $\{G_{instr}\}$                 &  $\Longrightarrow$  & $\{ \{F_{try}, G_{catch}\}, \{F_{\$}\}, \{F_{catch}, G_{finally}\}, \{F_{finally}\}, \{F_{;}\} \}$ \\
+                    $\{G_{try}\}$                   &  $\Longrightarrow$  & $\{ \{F_{try}, G_{catch}\}, \{F_{\$}\}, \{F_{catch}, G_{finally}\}, \{F_{finally}\}, \{F_{;}\} \}$ \\
+    
+                    & & \\ \hline
+                    $\{F_{instr}\}$                 &  $\Longrightarrow$  & $\{ \{F_{try}, G_{catch}\},  \{G_{\$}\}, \{F_{catch}, G_{finally}\}, \{G_{;}\}\}$ \\
+                    $\{F_{;}\}$                     &  $\Longrightarrow$  & $\{ \{G_{\$}\}, \{G_{;}\}\}$ \\
+                    $\{F_{finally}\}$               &  $\Longrightarrow$  & $\{ \{F_{try}, G_{catch}\},  \{G_{\$}\}, \{F_{catch}, G_{finally}\}, \{G_{;}\}\}$ \\
+    
+                    & & \\ \hline
+                    $\{G_{;}\}$                     &  $\Longrightarrow$  & $\{ \{F_{catch}, G_{finally}\}, \{F_\$ \} \}$ \\
+    
+                    & & \\ \hline
+                    $\{F_{catch}, G_{finally}\}$    &  $\Longrightarrow$  & $\{ \{F_{try}, G_{catch}\}, \{G_{\$}\} \}$ \\
+    
+                    & & \\ \hline
+                    $\{F_{\$}\}$                    &  $\Longrightarrow$  & $\emptyset$ \\
+                    $\{G_{\$}\}$                    &  $\Longrightarrow$  & $\emptyset$ \\
+                    $\{F_{try}, G_{catch}\}$        &  $\Longrightarrow$  & $\emptyset$ \\
+                    \hline
+                \end{tabular}
+            \end{center}
+
+            As\'i, los valores de \verb|f| y \verb|g| son: \\
+
+            \begin{center}
+                \begin{tabular}{ | c | c | c | c | c | c | c |}
+                    \hline
+                    & \verb|try| & \verb|catch| & \verb|finally| & \verb| ; | & \verb|instr| & \verb| $ | \\ \hline
+                    \verb| f | & 0 & 1 & 3 & 3 & 3 & 0 \\ \hline
+                    \verb| g | & 4 & 0 & 1 & 2 & 4 & 0 \\ \hline 
+                \end{tabular}
+            \end{center}
+            \vspace*{1,5cm}
+        \end{enumerate}
+
+        \item \textit{(4 puntos)} Considererando la misma gram\'atica de las preguntas anteriores, 
+        implementaremos una sem\'antica para este lenguaje donde las instrucciones tienen un valor 
+        adem\'as del efecto de borde que ocasionan. Para cualquier instrucción, su valor ser\'a el 
+        valor de la \'ultima expresi\'on que haya sido evaluada (o de la \'ultima instrucci\'on 
+        ejecutada, equivalentemente).
+
+        \begin{enumerate}
+            \item \textit{(2 puntos)} Aumente el s\'imbolo no-terminal \verb|I| con un atributo 
+            \verb|tipo|, que contenga el tipo del valor que retorna la instrucci\'on representada 
+            en \verb|I|. Puede suponer que cuenta con un tipo \verb|Either A B| para representar 
+            un tipo que es opcionalmente \verb|A| o \verb|B|. Puede suponer, adem\'as, que el 
+            sı\'imbolo \verb|instr| tiene un atributo intr\'inseco tipo que tiene el tipo para ese 
+            terminal. Puede agregar todos los atributos adicionales que desee a \verb|I|, cuidando 
+            que la gram\'atica resultante sea \textit{S-atribuida}.
+
+            \textbf{Respuesta:}
+            \begin{verbatim}
+S   ->  I $                         { S.tipo <- I.tipo }  
+I   ->  try I0 catch I1 finally I2  { I.tipo <- I2.tipo }
+     |  try I0 catch I1             { I.tipo <- Either I0.tipo I1.tipo }
+     |  I0 ; I1                     { I.tipo <- I1.tipo }
+     |  instr                       { I.tipo <- instr.tipo }
+            \end{verbatim}
+            \newpage
+
+            \item \textit{(1 punto)} Tenemos a nuestra disposici\'on un reconocedor descendente. 
+            La gram\'atica anterior tiene prefijos comunes y recursi\'on izquierda. Transforme la 
+            gram\'atica de tal forma que sea apropiada para un reconocedor descendente. Recuerde 
+            agregar atributos y reglas de tal forma que a\'un se calcule el tipo de la instrucci\'on
+            en tipo, cuidando que la gram\'atica resultante sea L–atribuida.
+            
+            \textbf{Respuesta:} 
+
+            \begin{verbatim}
+S   ->  I { S.tipo <- I.tipo } $  
+
+I   ->  E { R.in <- E.tipo } R { I.tipo <- R.tipo }   
+
+R   ->  ; I { R0.in <- I.tipo } R0 { R.tipo <- R0.tipo }
+     |  { R.tipo <- R.in }
+
+E   ->  try I0 catch { I1.in <- I0.tipo } 
+            I1 { F.in <- Either I1.in I1.tipo } 
+            F { E.tipo <- F.tipo }   
+     |  instr { E.tipo <- instr.tipo } 
+     
+F   ->  finally E { F.tipo <- E.tipo }       
+     |  { F.tipo <- F.in }
+            \end{verbatim}
+            \vspace*{1cm}
+        
+            \item \textit{(1 punto)} Construya un reconocedor recursivo descendente a partir 
+            de su gram\'atica. Esto es, escriba las funciones (en el lenguaje de su elección) 
+            que reconozca frases en el lenguaje y calculen el atributo tipo para una instrucci\'on 
+            bien formada. Deben llevar una variable \textit{lookahead} que contenga el siguiente 
+            sı\'imbolo de la entrada en todo momento. Su programa debe funcionar correctamente 
+            para cualquier entrada y estar alojada en un repositorio \textit{git} p\'ublico. \\
+
+            \textbf{Respuesta:} La implementaci\'on del reconocedor recursivo descendente se 
+            encuentra en el siguiente 
+            \href{https://github.com/ArriagaAmin/LenguajesIIParcial1/blob/main/Pregunta2/TryCatchLector}{archivo} 
+            del repositorio. Debe correr el script con \verb|python3|, el cual le proporcionar\'a
+            un prompt para usar el reconocedor, cuya sintaxis es:
+            
+            \begin{verbatim}
+                            $> PARSE [<string> ...]
+                            $> SALIR
+            \end{verbatim}
+
+        \end{enumerate}
+
+        \item \textit{(5 puntos)} Se desea que modele e implemente, en el lenguaje de su elecci\'on, 
+        un generador de analizadores sint\'acticos para gram\'aticas de operadores. Investigue 
+        herramientas para pruebas unitarias y cobertura en su lenguaje escogido y agregue pruebas a 
+        su programa que permitan corroborar su correcto funcionamiento. Como regla general, su programa 
+        deber\'ia tener una cobertura (de l\'ineas de c\'odigo y de bifuraci\'on) mayor al 80\%. \\
+
+        \textbf{Respuesta:} La implementaci\'on del generador de analizadores sint\'acticos se 
+        encuentra en el siguiente 
+        \href{https://github.com/ArriagaAmin/LenguajesIIParcial1/blob/main/Pregunta2/TryCatchLector}{archivo} 
+        del repositorio.
+    \end{enumerate}
+
+\end{document}

@@ -56,13 +56,17 @@ class OperatorGrammar:
       ...
       Exception: El simbolo \033[1;3má\033[0m no es valido. 
       Utilice caracteres y signos de la tabla ASCII, excepto el \033[1;3m$\033[0m.
+      >>> OG.is_terminal("ay no")
+      Traceback (most recent call last):
+      ...
+      Exception: El simbolo \033[1;3may no\033[0m no es valido.
+      Los simbolos deben estar compuestos de un solo caracter
     """
 
     if len(symbol) > 1:
       raise Exception(
-        f'El simbolo \033[1;3m{symbol}\033[0m no es valido. Por favor, utilice ' + \
-        'caracteres de la tabla ASCII que esten en el rango de valores [33, 127), ' + \
-        'excepto el 36 que corresponde al caracter \033[1;3m$\033[0m.'
+        f'El simbolo \033[1;3m{symbol}\033[0m no es valido.\nLos simbolos deben ' + \
+        'estar compuestos de un solo caracter'
       )
 
     ascii_value = ord(symbol)
@@ -783,7 +787,31 @@ class OperatorGrammar:
 
     entry = self.get_entry(w, index)
 
-    print(stack_str.ljust(l), entry.ljust(int(2.5*l + 8)), action)
+    print(stack_str.ljust(l), entry.ljust(int(2.5*l + 12)), action)
+
+  def verify_input(self, w: str):
+    """
+      Verifica que los simbolos en una palabra sean terminales y comparables entre si.
+    """
+    w = "$" + w.replace(" ", "") + "$"
+
+    if len(w) == 0: return 
+
+    # Verificamos que todos los simbolos son terminales y comparables con el simbolo anterior.
+    for i in range(1, len(w)):
+      if not w[i] in self.Sigma:
+        if not w[i] in self.N:
+          raise Exception(
+            f'El simbolo \033[1;3m{w[0]}\033[0m no es parte de la gramatica.'
+          )
+        raise Exception(
+          f'El simbolo \033[1;3m{w[0]}\033[0m es no-terminal.'
+        )
+
+      if not (w[i-1] in self.precedences and w[i] in self.precedences[w[i-1]]):
+        raise Exception(
+          f'No existe una relacion de precedencia entre los simbolos \033[1;3m{w[i-1]}\033[0m y \033[1;3m{w[i]}\033[0m.'
+        )
 
   def parse(self, w: str):
     """
@@ -823,7 +851,7 @@ class OperatorGrammar:
       >>> OG.make_precedence_functions()
 
       >>> OG.parse("i+i+i*i")
-      PILA               ENTRADA                                               ACCION
+      PILA               ENTRADA                                       ACCION
       $                  $ < [1;5;7mi[0m > + < i > + < i > * < i > $         Leer i
       $ i                $ < i > [1;5;7m+[0m < i > + < i > * < i > $         Reducir:  E -> i 
       $ E                $ < [1;5;7m+[0m < i > + < i > * < i > $             Leer +
@@ -838,26 +866,30 @@ class OperatorGrammar:
       $ E + E + E * E    $ < + = + < * > [1;5;7m$[0m                         Reducir:  E -> E * E 
       $ E + E + E        $ < + = + > [1;5;7m$[0m                             Reducir:  E -> E + E + E 
       $ E                $ = $                                                 Reducir:  S -> E 
-      $ S                $ = $                                                 Aceptar
+      $ S                $ = $                                                 [1;3;36mACEPTAR[0m
 
       >>> OG.parse("i**i")
-      PILA         ENTRADA                                ACCION
+      PILA         ENTRADA                        ACCION
       $            $ < [1;5;7mi[0m > * > * < i > $      Leer i
       $ i          $ < i > [1;5;7m*[0m > * < i > $      Reducir:  E -> i 
       $ E          $ < [1;5;7m*[0m > * < i > $          Leer *
-      $ E *        $ < * > [1;5;7m*[0m < i > $          Rechazar. No se puede reducir E * 
+      $ E *        $ < * > [1;5;7m*[0m < i > $          [1;3;31mRECHAZAR[0m. No se puede reducir E * 
 
       >>> OG.parse("")
-      PILA ENTRADA            ACCION
-      $    $ = [1;5;7m$[0m  Rechazar. No se puede reducir ()
+      Traceback (most recent call last):
+      ...
+      Exception: No existe una relacion de precedencia entre los simbolos [1;3m$[0m y [1;3m$[0m.
     """
 
+    # Verificamos que el input sea valida 
+    self.verify_input(w)
+    
     # Pila de simbolos
     stack = ["$"]
     # Agregamos $ en los extremos de la entrada
     w = "$" + w.replace(" ", "") + "$"
     l = 2 * len(w)
-    print("PILA".ljust(l), "ENTRADA".ljust(int(2.5*l) + 8), "ACCION")
+    print("PILA".ljust(l), "ENTRADA".ljust(int(2.5*l)), "ACCION")
 
     # Obtenemos el primer indice que no corresponda a espacio en la entrada
     index = 1
@@ -877,13 +909,13 @@ class OperatorGrammar:
         production.reverse()
         # Verificamos que llegamos al simbolo inicial.
         if (len(stack) == 2) and (stack[1] == self.S):
-          self.print_step(stack, w, index, 'Aceptar', l)
+          self.print_step(stack, w, index, '\033[1;3;36mACEPTAR\033[0m', l)
           return 
 
         # Si no, vemos si los elementos actuales corresponden a una produccion.
         elif not tuple(production) in self.P_ref:
           right = tuple(production)
-          self.print_step(stack, w, index, f'Rechazar. No se puede reducir {right}', l)
+          self.print_step(stack, w, index, f'\033[1;3;31mRECHAZAR\033[0m No se puede reducir {right}', l)
           return
 
         else:
@@ -935,7 +967,7 @@ class OperatorGrammar:
         for t in production: right += t + " "
 
         if not production in self.P_ref:
-          self.print_step(stack_copy, w, index, f'Rechazar. No se puede reducir {right}', l)
+          self.print_step(stack_copy, w, index, f'\033[1;3;31mRECHAZAR\033[0m. No se puede reducir {right}', l)
           return
         
         production_str = self.get_rule(production)
@@ -1065,7 +1097,9 @@ def main(input = input):
     ...     "PARSE n + * n",
     ...     "PARSE n",
     ...     "PARSE a + b * c",
-    ...     "PARSE n n",
+    ...     "PARSE n + n * c",
+    ...     "PARSE n + n n",
+    ...     "PARSE n + n E",
     ...     "PARSE",
     ...     "SALIR", 
     ...   ]
@@ -1073,6 +1107,19 @@ def main(input = input):
     ...   return r[index[0]]
 
     >>> main(fake_input)
+    Generador de analizadores de [3mGramaticas de Operadores[0m.
+    <BLANKLINE>
+    [1mSYNOPSIS[0m
+      [1mRULE[0m <[4mNO-TERMINAL[0m> [<[4mSIMBOLO[0m> ...]
+      [1mINIT[0m <[4mNO-TERMINAL[0m>
+      [1mPREC[0m <[4mNO-TERMINAL[0m> <[4mOPERATION[0m> <[4mNO-TERMINAL[0m>
+      [1mBUILD[0m
+      [1mPARSE[0m [<[4mSTRING[0m> ...]
+      [1mSALIR[0m
+    <BLANKLINE>
+    Para obtener un analisis de prueba unitarias y cobertura, instale la libreria [3mcoverage[0m y ejecute
+      $ coverage run OperatorGrammarAnalyzer.py --test && coverage annotate && coverage report
+    <BLANKLINE>
     Regla [1;3mE -> E + E [0m agregada a la gramatica.
     Regla [1;3mE -> E + E [0m agregada a la gramatica.
     Regla [1;3mE -> E * E [0m agregada a la gramatica.
@@ -1108,42 +1155,52 @@ def main(input = input):
       g(*) = 3
       g(+) = 1
       g(n) = 5
-    PILA           ENTRADA                                     ACCION
-    $              $ < [1;5;7mn[0m > + < n > * < n > $       Leer n
-    $ n            $ < n > [1;5;7m+[0m < n > * < n > $       Reducir:  E -> n 
-    $ E            $ < [1;5;7m+[0m < n > * < n > $           Leer +
-    $ E +          $ < + < [1;5;7mn[0m > * < n > $           Leer n
-    $ E + n        $ < + < n > [1;5;7m*[0m < n > $           Reducir:  E -> n 
-    $ E + E        $ < + < [1;5;7m*[0m < n > $               Leer *
-    $ E + E *      $ < + < * < [1;5;7mn[0m > $               Leer n
-    $ E + E * n    $ < + < * < n > [1;5;7m$[0m               Reducir:  E -> n 
-    $ E + E * E    $ < + < * > [1;5;7m$[0m                   Reducir:  E -> E * E 
-    $ E + E        $ < + > [1;5;7m$[0m                       Reducir:  E -> E + E 
-    $ E            $ = [1;5;7m$[0m                           Aceptar
-    PILA         ENTRADA                                ACCION
-    $            $ < [1;5;7mn[0m > + < * < n > $      Leer n
-    $ n          $ < n > [1;5;7m+[0m < * < n > $      Reducir:  E -> n 
-    $ E          $ < [1;5;7m+[0m < * < n > $          Leer +
-    $ E +        $ < + < [1;5;7m*[0m < n > $          Leer *
-    $ E + *      $ < + < * < [1;5;7mn[0m > $          Leer n
-    $ E + * n    $ < + < * < n > [1;5;7m$[0m          Reducir:  E -> n 
-    $ E + * E    $ < + < * > [1;5;7m$[0m              Rechazar. No se puede reducir * E 
-    PILA   ENTRADA                 ACCION
-    $      $ < [1;5;7mn[0m > $   Leer n
-    $ n    $ < n > [1;5;7m$[0m   Reducir:  E -> n 
-    $ E    $ = [1;5;7m$[0m       Aceptar
-    PILA           ENTRADA                                     ACCION
-    [1;31mError:[0m  El simbolo [1;3ma[0m no es parte de la gramatica.
-    PILA     ENTRADA                      ACCION
-    $        $ < [1;5;7mn[0m < n > $    Leer n
-    $ n      $ < n < [1;5;7mn[0m > $    Leer n
-    $ n n    $ < n < n > [1;5;7m$[0m    Reducir:  E -> n 
-    $ n E    $ < n > [1;5;7m$[0m        Rechazar. No se puede reducir n E 
-    PILA ENTRADA            ACCION
-    $    $ = [1;5;7m$[0m  Rechazar. No se puede reducir ()
+    PILA           ENTRADA                             ACCION
+    $              $ < [1;5;7mn[0m > + < n > * < n > $           Leer n
+    $ n            $ < n > [1;5;7m+[0m < n > * < n > $           Reducir:  E -> n 
+    $ E            $ < [1;5;7m+[0m < n > * < n > $               Leer +
+    $ E +          $ < + < [1;5;7mn[0m > * < n > $               Leer n
+    $ E + n        $ < + < n > [1;5;7m*[0m < n > $               Reducir:  E -> n 
+    $ E + E        $ < + < [1;5;7m*[0m < n > $                   Leer *
+    $ E + E *      $ < + < * < [1;5;7mn[0m > $                   Leer n
+    $ E + E * n    $ < + < * < n > [1;5;7m$[0m                   Reducir:  E -> n 
+    $ E + E * E    $ < + < * > [1;5;7m$[0m                       Reducir:  E -> E * E 
+    $ E + E        $ < + > [1;5;7m$[0m                           Reducir:  E -> E + E 
+    $ E            $ = [1;5;7m$[0m                               [1;3;36mACEPTAR[0m
+    PILA         ENTRADA                        ACCION
+    $            $ < [1;5;7mn[0m > + < * < n > $          Leer n
+    $ n          $ < n > [1;5;7m+[0m < * < n > $          Reducir:  E -> n 
+    $ E          $ < [1;5;7m+[0m < * < n > $              Leer +
+    $ E +        $ < + < [1;5;7m*[0m < n > $              Leer *
+    $ E + *      $ < + < * < [1;5;7mn[0m > $              Leer n
+    $ E + * n    $ < + < * < n > [1;5;7m$[0m              Reducir:  E -> n 
+    $ E + * E    $ < + < * > [1;5;7m$[0m                  [1;3;31mRECHAZAR[0m. No se puede reducir * E 
+    PILA   ENTRADA         ACCION
+    $      $ < [1;5;7mn[0m > $       Leer n
+    $ n    $ < n > [1;5;7m$[0m       Reducir:  E -> n 
+    $ E    $ = [1;5;7m$[0m           [1;3;36mACEPTAR[0m
+    [1;31mError:[0m  El simbolo [1;3m$[0m no es parte de la gramatica.
+    [1;31mError:[0m  El simbolo [1;3m$[0m no es parte de la gramatica.
+    [1;31mError:[0m  No existe una relacion de precedencia entre los simbolos [1;3mn[0m y [1;3mn[0m.
+    [1;31mError:[0m  El simbolo [1;3m$[0m es no-terminal.
+    [1;31mError:[0m  No existe una relacion de precedencia entre los simbolos [1;3m$[0m y [1;3m$[0m.
     Hasta luego!
   """
   OG = OperatorGrammar()
+
+  print(
+    'Generador de analizadores de \033[3mGramaticas de Operadores\033[0m.\n\n' + \
+    '\033[1mSYNOPSIS\033[0m\n' +\
+    '  \033[1mRULE\033[0m <\033[4mNO-TERMINAL\033[0m> [<\033[4mSIMBOLO\033[0m> ...]\n' + \
+    '  \033[1mINIT\033[0m <\033[4mNO-TERMINAL\033[0m>\n' + \
+    '  \033[1mPREC\033[0m <\033[4mNO-TERMINAL\033[0m> <\033[4mOPERATION\033[0m> <\033[4mNO-TERMINAL\033[0m>\n' + \
+    '  \033[1mBUILD\033[0m\n' + \
+    '  \033[1mPARSE\033[0m [<\033[4mSTRING\033[0m> ...]\n' + \
+    '  \033[1mSALIR\033[0m\n\n' + \
+    'Para obtener un analisis de prueba unitarias y cobertura, instale la libreria \033[3mcoverage\033[0m y ejecute\n' + \
+    '  $ coverage run OperatorGrammarAnalyzer.py --test && coverage annotate && coverage report\n'
+  )
+
   while True:
     command = input("$> ")
 

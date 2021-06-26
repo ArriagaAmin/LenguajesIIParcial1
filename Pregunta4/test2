@@ -2,12 +2,14 @@ PREC t < t
 PREC t = c 
 PREC t < i 
 PREC c < t
-PREC c = f 
 PREC c > c
+PREC c = f 
 PREC c < ; 
 PREC c < i 
 PREC c > $ 
 PREC f < t 
+PREC f > c 
+PREC f > f
 PREC f > ; 
 PREC f < i 
 PREC f > $ 
@@ -23,5 +25,10 @@ PREC $ < t
 PREC $ < ; 
 PREC $ < i
 INIT S
+RULE S I 
+RULE I t I c I f I
+RULE I t I c I 
+RULE I I ; I 
+RULE I i 
 BUILD 
 SALIR
