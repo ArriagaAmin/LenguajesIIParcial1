@@ -1,32 +1,33 @@
 
-  Estado I8,I15,I24,I31  con 1 conflicto  shift/reduce
-  Estado I12,I20,I29,I34 con 2 conflictos shift/reduce
-  Estado I23,I30,I35,I37 con 1 conflicto  shift/reduce
+  Estado I6  con 1 conflicto  shift/reduce
+  Estado I8 con 2 conflictos shift/reduce
+  Estado I10 con 1 conflicto  shift/reduce
 
 I0:
-    S -> . I                              {$}
+    S -> . I $                            {$}
     I -> . try I catch I finally I        {$, ;}
     I -> . try I catch I                  {$, ;}
     I -> . I ; I                          {$, ;}
     I -> . inst                           {$, ;}
     __________________________________________
-    inst  ==>   I1,I7,I14,I22
+    inst  ==>   I1
     I     ==>   I2 
-    try   ==>   I3,I6,I13,I21 
+    try   ==>   I3 
 
 
-I1,I7,I14,I22:
+I1:
     I -> inst .                           {finally, ;, $, catch}
 
 
 I2:
-    S -> I .                              {$}
+    S -> I . $                            {$}
     I -> I . ; I                          {$, ;}
     __________________________________________ 
-    ;    ==>    I4,I10,I18,I27
+    ;    ==>    I4
+    $    ==>    I11
 
 
-I3,I6,I13,I21:
+I3:
     I -> try . I catch I finally I        {finally, $, ;, catch}
     I -> try . I catch I                  {finally, $, ;, catch}
     I -> . try I catch I finally I        {catch, ;}
@@ -34,43 +35,43 @@ I3,I6,I13,I21:
     I -> . I ; I                          {catch, ;}
     I -> . inst                           {catch, ;}
     __________________________________________
-    I     ==>     I5,I11,I19,I28
-    try   ==>     I3,I6,I13,I21
-    inst  ==>     I1,I7,I14,I22
+    I     ==>     I5
+    try   ==>     I3
+    inst  ==>     I1
 
 
-I4,I10,I18,I27:
+I4:
     I -> I ; . I                          {finally, $, ;, catch}
     I -> . try I catch I finally I        {finally, $, ;, catch}
     I -> . try I catch I                  {finally, $, ;, catch}
     I -> . I ; I                          {finally, $, ;, catch}
     I -> . inst                           {finally, $, ;, catch}
     __________________________________________
-    I     ==>     I8,I15,I24,I31 
-    try   ==>     I3,I6,I13,I21 
-    inst  ==>     I1,I7,I14,I22
+    I     ==>     I6 
+    try   ==>     I3 
+    inst  ==>     I1
 
 
-I5,I11,I19,I28:
+I5:
     I -> try I . catch I finally I        {finally, $, ;, catch}
     I -> try I . catch I                  {finally, $, ;, catch}
     I -> I . ; I                          {catch, ;}
     __________________________________________
-    catch ==>     I9,I16,I25,I32
-    ;     ==>     I4,I10,I18,I27
+    catch ==>     I7
+    ;     ==>     I4
 
 
-I8,I15,I24,I31:
+I6:
     I -> I ; I .                          {finally, $, ;, catch}
     I -> I . ; I                          {finally, $, ;, catch}
     __________________________________________
-    ;     ==>     I4,I10,I18,I27  
+    ;     ==>     I4  
 
     #! Conflicto Shift ;   /   Reduce I -> I ; I
     [default] Reduce I -> I ; I
 
 
-I9,I16,I25,I32:
+I7:
     I -> try I catch . I finally I        {finally, ;, $, catch}
     I -> try I catch . I                  {finally, ;, $, catch}
     I -> . try I catch I finally I        {finally, ;, $, catch}
@@ -78,18 +79,18 @@ I9,I16,I25,I32:
     I -> . I ; I                          {finally, ;, $, catch}
     I -> . inst                           {finally, ;, $, catch}
     __________________________________________
-    I     ==>     I12,I20,I29,I34
-    try   ==>     I3,I6,I13,I21
-    inst  ==>     I1,I7,I14,I22
+    I     ==>     I8
+    try   ==>     I3
+    inst  ==>     I1
 
 
-I12,I20,I29,I34:
+I8:
     I -> try I catch I . finally I        {finally, ;, $, catch}
     I -> try I catch I .                  {finally, ;, $, catch}
     I -> I . ; I                          {finally, ;, $, catch}
     __________________________________________
-    finally ==>   I17,I26,I33,I36
-    ;       ==>   I4,I10,I18,I27
+    finally ==>   I9
+    ;       ==>   I4
 
     #! Conflicto Shift ;   /   Reduce I -> try I catch I
     [default] Shift ;
@@ -98,23 +99,26 @@ I12,I20,I29,I34:
     [default] Shift finally
 
 
-I17,I26,I33,I36:
+I9:
     I -> try I catch I finally . I        {finally, ;, $, catch}
     I -> . try I catch I finally I        {finally, ;, $, catch}
     I -> . try I catch I                  {finally, ;, $, catch}
     I -> . I ; I                          {finally, ;, $, catch}
     I -> . inst                           {finally, ;, $, catch}
     __________________________________________
-    I     ==>     I23,I30,I35,I37
-    try   ==>     I3,I6,I13,I21
-    inst  ==>     I1,I7,I14,I22
+    I     ==>     I10
+    try   ==>     I3
+    inst  ==>     I1
 
 
-I23,I30,I35,I37:
+I10:
     I -> try I catch I finally I .        {finally, ;, $, catch}
     I -> I . ; I                          {finally, ;, $, catch}
     __________________________________________
-    ;     ==>     I4,I10,I18,I27
+    ;     ==>     I4
 
     #! Conflicto Shift ;   /   Reduce I -> try I catch I finally I
     [default] Reduce I -> try I catch I finally I
+
+I11:
+    S -> I $ .                            {$} 

@@ -1,6 +1,6 @@
 
 GRAMATICA:
-S  -> I
+S  -> I $
 I  -> try I catch I f inally I
     | try I catch I
     | I ; I
@@ -24,7 +24,7 @@ CONCLICTOS:
 
 MAQUINA CARACTERISTICA LR(1):
 I0:
-    S -> . I                              {$}
+    S -> . I $                            {$}
     I -> . try I catch I finally I        {$, ;}
     I -> . try I catch I                  {$, ;}
     I -> . I ; I                          {$, ;}
@@ -38,10 +38,11 @@ I1:
     I -> inst .                           {$, ;}
 
 I2:
-    S -> I .                              {$}
+    S -> I . $                            {$}
     I -> I . ; I                          {$, ;}
     __________________________________________ 
     ;    ==>    I4
+    $    ==>    I38
 
 I3:
     I -> try . I catch I finally I        {$, ;}
@@ -389,3 +390,6 @@ I37:
 
     #! Conflicto Shift ;   /   Reduce I -> try I catch I finally I
     [default] Reduce I -> try I catch I finally I
+
+I38:
+    S -> I $ .                            {$} 
