@@ -522,6 +522,15 @@ class OperatorGrammar:
           else: 
             self.nodes[self.equivs[(left, True)]] = set([self.equivs[(right, False)]])
 
+  def get_node_str(self, node: int) -> str:
+    """
+      Retorna la representacion de una clase de equivalencia.
+    """
+    output = "{"
+    for symbol in self.equivs_reverse[node]:
+      output += "F"*symbol[1] + "G"*(not symbol[1]) + "_" + symbol[0] + ", "
+    return output[:-2] + "}"
+
   def precedences_error(self, path: List[Tuple[int, bool]]):
     """
       Obtenemos el ciclo de precedencia y lo reportamos.
@@ -532,14 +541,18 @@ class OperatorGrammar:
         break 
 
     error = "Ha ocurrido un ciclo en las precedencias.\n" + \
-      "A continuacion reportaremos las clases de equivalencias relacionadas.\n" + \
-      "Si aparece un simbolo \033[1;3m(s, b)\033[0m, \033[1;3mb\033[0m indica si " + \
-      "es un f-nodo en caso de ser True, o un g-nodo en caso contrario.\n\n"
+      "A continuacion reportaremos las clases de equivalencias relacionadas:\n\n"
 
     # Creamos un string que representa el ciclo
     for i in range(index, len(path)-1):
-      error += str(self.equivs_reverse[path[i]]) + " -> "
-    error += str(self.equivs_reverse[path[-1]])
+      error += str(self.get_node_str(path[i])) + " -> "
+    error += str(self.get_node_str(path[-1]))
+
+    # Liberamos la memoria de los grafos de precedencia
+    self.equiv_graph.clear()
+    self.equivs.clear()
+    self.equivs_reverse.clear()
+    self.nodes.clear()
 
     # Reportamos el error
     raise Exception(error)
@@ -713,7 +726,7 @@ class OperatorGrammar:
       if self.is_terminal(stack[i], True): return i
     return -1
 
-  def get_entry(self, w: str) -> str:
+  def get_entry(self, w: str, index: int) -> str:
     """
       Retorna una entrada colocandole las relaciones de precedencia correspondientes.
 
@@ -744,7 +757,7 @@ class OperatorGrammar:
 
       >>> OG.make_precedence_functions()
 
-      >>> OG.get_entry("$+i     * +    $")
+      >>> OG.get_entry("$+i     * +    $", -1)
       '$ < + < i > * > + > $'
     """
 
@@ -758,19 +771,19 @@ class OperatorGrammar:
       else: output += " = "
 
       last_symbol = w[i]
-      output += w[i]
+      output += "\033[1;5;7m"*(index == i) + w[i] + "\033[0m"*(index == i)
     return output
 
-  def print_step(self, stack: List[str], w: str, action: str, l: int):
+  def print_step(self, stack: List[str], w: str, index: int, action: str, l: int):
     """
       Imprime un paso en el proceso de parsear.
     """
     stack_str = ""
     for s in stack: stack_str += s + " "
 
-    entry = self.get_entry(w)
+    entry = self.get_entry(w, index)
 
-    print(stack_str.ljust(l), entry.ljust(int(2.5*l)), action)
+    print(stack_str.ljust(l), entry.ljust(int(2.5*l + 8)), action)
 
   def parse(self, w: str):
     """
@@ -810,33 +823,33 @@ class OperatorGrammar:
       >>> OG.make_precedence_functions()
 
       >>> OG.parse("i+i+i*i")
-      PILA               ENTRADA                                       ACCION
-      $                  $ < i > + < i > + < i > * < i > $             Leer i
-      $ i                $ < i > + < i > + < i > * < i > $             Reducir:  E -> i 
-      $ E                $ < + < i > + < i > * < i > $                 Leer +
-      $ E +              $ < + < i > + < i > * < i > $                 Leer i
-      $ E + i            $ < + < i > + < i > * < i > $                 Reducir:  E -> i 
-      $ E + E            $ < + = + < i > * < i > $                     Leer +
-      $ E + E +          $ < + = + < i > * < i > $                     Leer i
-      $ E + E + i        $ < + = + < i > * < i > $                     Reducir:  E -> i 
-      $ E + E + E        $ < + = + < * < i > $                         Leer *
-      $ E + E + E *      $ < + = + < * < i > $                         Leer i
-      $ E + E + E * i    $ < + = + < * < i > $                         Reducir:  E -> i 
-      $ E + E + E * E    $ < + = + < * > $                             Reducir:  E -> E * E 
-      $ E + E + E        $ < + = + > $                                 Reducir:  E -> E + E + E 
-      $ E                $ = $                                         Reducir:  S -> E 
-      $ S                $ = $                                         Aceptar
+      PILA               ENTRADA                                               ACCION
+      $                  $ < [1;5;7mi[0m > + < i > + < i > * < i > $         Leer i
+      $ i                $ < i > [1;5;7m+[0m < i > + < i > * < i > $         Reducir:  E -> i 
+      $ E                $ < [1;5;7m+[0m < i > + < i > * < i > $             Leer +
+      $ E +              $ < + < [1;5;7mi[0m > + < i > * < i > $             Leer i
+      $ E + i            $ < + < i > [1;5;7m+[0m < i > * < i > $             Reducir:  E -> i 
+      $ E + E            $ < + = [1;5;7m+[0m < i > * < i > $                 Leer +
+      $ E + E +          $ < + = + < [1;5;7mi[0m > * < i > $                 Leer i
+      $ E + E + i        $ < + = + < i > [1;5;7m*[0m < i > $                 Reducir:  E -> i 
+      $ E + E + E        $ < + = + < [1;5;7m*[0m < i > $                     Leer *
+      $ E + E + E *      $ < + = + < * < [1;5;7mi[0m > $                     Leer i
+      $ E + E + E * i    $ < + = + < * < i > [1;5;7m$[0m                     Reducir:  E -> i 
+      $ E + E + E * E    $ < + = + < * > [1;5;7m$[0m                         Reducir:  E -> E * E 
+      $ E + E + E        $ < + = + > [1;5;7m$[0m                             Reducir:  E -> E + E + E 
+      $ E                $ = $                                                 Reducir:  S -> E 
+      $ S                $ = $                                                 Aceptar
 
       >>> OG.parse("i**i")
-      PILA         ENTRADA                        ACCION
-      $            $ < i > * > * < i > $          Leer i
-      $ i          $ < i > * > * < i > $          Reducir:  E -> i 
-      $ E          $ < * > * < i > $              Leer *
-      $ E *        $ < * > * < i > $              Rechazar. No se puede reducir E * 
+      PILA         ENTRADA                                ACCION
+      $            $ < [1;5;7mi[0m > * > * < i > $      Leer i
+      $ i          $ < i > [1;5;7m*[0m > * < i > $      Reducir:  E -> i 
+      $ E          $ < [1;5;7m*[0m > * < i > $          Leer *
+      $ E *        $ < * > [1;5;7m*[0m < i > $          Rechazar. No se puede reducir E * 
 
       >>> OG.parse("")
-      PILA ENTRADA    ACCION
-      $    $ = $      Rechazar. No se puede reducir ()
+      PILA ENTRADA            ACCION
+      $    $ = [1;5;7m$[0m  Rechazar. No se puede reducir ()
     """
 
     # Pila de simbolos
@@ -844,7 +857,7 @@ class OperatorGrammar:
     # Agregamos $ en los extremos de la entrada
     w = "$" + w.replace(" ", "") + "$"
     l = 2 * len(w)
-    print("PILA".ljust(l), "ENTRADA".ljust(int(2.5*l)), "ACCION")
+    print("PILA".ljust(l), "ENTRADA".ljust(int(2.5*l) + 8), "ACCION")
 
     # Obtenemos el primer indice que no corresponda a espacio en la entrada
     index = 1
@@ -864,24 +877,24 @@ class OperatorGrammar:
         production.reverse()
         # Verificamos que llegamos al simbolo inicial.
         if (len(stack) == 2) and (stack[1] == self.S):
-          self.print_step(stack, w, 'Aceptar', l)
+          self.print_step(stack, w, index, 'Aceptar', l)
           return 
 
         # Si no, vemos si los elementos actuales corresponden a una produccion.
         elif not tuple(production) in self.P_ref:
           right = tuple(production)
-          self.print_step(stack, w, f'Rechazar. No se puede reducir {right}', l)
+          self.print_step(stack, w, index, f'Rechazar. No se puede reducir {right}', l)
           return
 
         else:
           rule = self.get_rule(tuple(production))
-          self.print_step(stack, w, f'Reducir:  {rule}', l)
+          self.print_step(stack, w, index, f'Reducir:  {rule}', l)
           stack = ["$", self.P_ref[tuple(production)]]
           continue
 
       if self.f[p] <= self.g[e]:
         # Agregamos el elemento a la pila y obtenemos el siguiente elemento terminal
-        self.print_step(stack, w, "Leer " + e + "", l)
+        self.print_step(stack, w, index, "Leer " + e + "", l)
         stack.append(e)
         index += 1
         while w[index] == " ": index += 1
@@ -922,11 +935,11 @@ class OperatorGrammar:
         for t in production: right += t + " "
 
         if not production in self.P_ref:
-          self.print_step(stack_copy, w, f'Rechazar. No se puede reducir {right}', l)
+          self.print_step(stack_copy, w, index, f'Rechazar. No se puede reducir {right}', l)
           return
         
         production_str = self.get_rule(production)
-        self.print_step(stack_copy, w, f'Reducir:  {production_str}', l)
+        self.print_step(stack_copy, w, index, f'Reducir:  {production_str}', l)
         stack.append(self.P_ref[production])
         w = w[:index-delete] + w[index:]
         index -= 1
@@ -1060,30 +1073,30 @@ def main(input = input):
     ...   return r[index[0]]
 
     >>> main(fake_input)
-    Regla \033[1;3mE -> E + E \033[0m agregada a la gramatica.
-    Regla \033[1;3mE -> E + E \033[0m agregada a la gramatica.
-    Regla \033[1;3mE -> E * E \033[0m agregada a la gramatica.
-    \033[1;31mError:\033[0m  La regla contiene dos simbolos no-terminales \033[1;3mE\033[0m y \033[1;3mE\033[0m seguidos. 
-    Recuerde que una \033[3mGramatica de Operadores\033[0m no debe contener dos simbolos no-terminales seguidos.
-    Regla \033[1;3mE -> n \033[0m agregada a la gramatica.
-    \033[1;31mError:\033[0m  El simbolo \033[1;3me\033[0m es terminal. 
+    Regla [1;3mE -> E + E [0m agregada a la gramatica.
+    Regla [1;3mE -> E + E [0m agregada a la gramatica.
+    Regla [1;3mE -> E * E [0m agregada a la gramatica.
+    [1;31mError:[0m  La regla contiene dos simbolos no-terminales [1;3mE[0m y [1;3mE[0m seguidos. 
+    Recuerde que una [3mGramatica de Operadores[0m no debe contener dos simbolos no-terminales seguidos.
+    Regla [1;3mE -> n [0m agregada a la gramatica.
+    [1;31mError:[0m  El simbolo [1;3me[0m es terminal. 
     El simbolo inicial debe ser no-terminal.
-    Se establecio \033[1;3mE\033[0m como simbolo inicial de la gramatica.
-    Se establecio la relacion de precedencia \033[1;3mn > +\033[0m.
-    Se establecio la relacion de precedencia \033[1;3mn > *\033[0m.
-    Se establecio la relacion de precedencia \033[1;3mn > $\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m+ < n\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m+ > +\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m+ < *\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m+ > $\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m* < n\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m* > +\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m* > *\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m* > $\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m$ < n\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m$ < +\033[0m.
-    Se establecio la relacion de precedencia \033[1;3m$ < *\033[0m.
-    \033[1;31mError:\033[0m Aun no se ha construido el analizador sintactico.
+    Se establecio [1;3mE[0m como simbolo inicial de la gramatica.
+    Se establecio la relacion de precedencia [1;3mn > +[0m.
+    Se establecio la relacion de precedencia [1;3mn > *[0m.
+    Se establecio la relacion de precedencia [1;3mn > $[0m.
+    Se establecio la relacion de precedencia [1;3m+ < n[0m.
+    Se establecio la relacion de precedencia [1;3m+ > +[0m.
+    Se establecio la relacion de precedencia [1;3m+ < *[0m.
+    Se establecio la relacion de precedencia [1;3m+ > $[0m.
+    Se establecio la relacion de precedencia [1;3m* < n[0m.
+    Se establecio la relacion de precedencia [1;3m* > +[0m.
+    Se establecio la relacion de precedencia [1;3m* > *[0m.
+    Se establecio la relacion de precedencia [1;3m* > $[0m.
+    Se establecio la relacion de precedencia [1;3m$ < n[0m.
+    Se establecio la relacion de precedencia [1;3m$ < +[0m.
+    Se establecio la relacion de precedencia [1;3m$ < *[0m.
+    [1;31mError:[0m Aun no se ha construido el analizador sintactico.
     Analizador sintaction construido.
     Los valores de f son:
       f($) = 0
@@ -1095,39 +1108,39 @@ def main(input = input):
       g(*) = 3
       g(+) = 1
       g(n) = 5
-    PILA           ENTRADA                             ACCION
-    $              $ < n > + < n > * < n > $           Leer n
-    $ n            $ < n > + < n > * < n > $           Reducir:  E -> n 
-    $ E            $ < + < n > * < n > $               Leer +
-    $ E +          $ < + < n > * < n > $               Leer n
-    $ E + n        $ < + < n > * < n > $               Reducir:  E -> n 
-    $ E + E        $ < + < * < n > $                   Leer *
-    $ E + E *      $ < + < * < n > $                   Leer n
-    $ E + E * n    $ < + < * < n > $                   Reducir:  E -> n 
-    $ E + E * E    $ < + < * > $                       Reducir:  E -> E * E 
-    $ E + E        $ < + > $                           Reducir:  E -> E + E 
-    $ E            $ = $                               Aceptar
-    PILA         ENTRADA                        ACCION
-    $            $ < n > + < * < n > $          Leer n
-    $ n          $ < n > + < * < n > $          Reducir:  E -> n 
-    $ E          $ < + < * < n > $              Leer +
-    $ E +        $ < + < * < n > $              Leer *
-    $ E + *      $ < + < * < n > $              Leer n
-    $ E + * n    $ < + < * < n > $              Reducir:  E -> n 
-    $ E + * E    $ < + < * > $                  Rechazar. No se puede reducir * E 
-    PILA   ENTRADA         ACCION
-    $      $ < n > $       Leer n
-    $ n    $ < n > $       Reducir:  E -> n 
-    $ E    $ = $           Aceptar
-    PILA           ENTRADA                             ACCION
-    \033[1;31mError:\033[0m  El simbolo \033[1;3ma\033[0m no es parte de la gramatica.
-    PILA     ENTRADA              ACCION
-    $        $ < n < n > $        Leer n
-    $ n      $ < n < n > $        Leer n
-    $ n n    $ < n < n > $        Reducir:  E -> n 
-    $ n E    $ < n > $            Rechazar. No se puede reducir n E 
-    PILA ENTRADA    ACCION
-    $    $ = $      Rechazar. No se puede reducir ()
+    PILA           ENTRADA                                     ACCION
+    $              $ < [1;5;7mn[0m > + < n > * < n > $       Leer n
+    $ n            $ < n > [1;5;7m+[0m < n > * < n > $       Reducir:  E -> n 
+    $ E            $ < [1;5;7m+[0m < n > * < n > $           Leer +
+    $ E +          $ < + < [1;5;7mn[0m > * < n > $           Leer n
+    $ E + n        $ < + < n > [1;5;7m*[0m < n > $           Reducir:  E -> n 
+    $ E + E        $ < + < [1;5;7m*[0m < n > $               Leer *
+    $ E + E *      $ < + < * < [1;5;7mn[0m > $               Leer n
+    $ E + E * n    $ < + < * < n > [1;5;7m$[0m               Reducir:  E -> n 
+    $ E + E * E    $ < + < * > [1;5;7m$[0m                   Reducir:  E -> E * E 
+    $ E + E        $ < + > [1;5;7m$[0m                       Reducir:  E -> E + E 
+    $ E            $ = [1;5;7m$[0m                           Aceptar
+    PILA         ENTRADA                                ACCION
+    $            $ < [1;5;7mn[0m > + < * < n > $      Leer n
+    $ n          $ < n > [1;5;7m+[0m < * < n > $      Reducir:  E -> n 
+    $ E          $ < [1;5;7m+[0m < * < n > $          Leer +
+    $ E +        $ < + < [1;5;7m*[0m < n > $          Leer *
+    $ E + *      $ < + < * < [1;5;7mn[0m > $          Leer n
+    $ E + * n    $ < + < * < n > [1;5;7m$[0m          Reducir:  E -> n 
+    $ E + * E    $ < + < * > [1;5;7m$[0m              Rechazar. No se puede reducir * E 
+    PILA   ENTRADA                 ACCION
+    $      $ < [1;5;7mn[0m > $   Leer n
+    $ n    $ < n > [1;5;7m$[0m   Reducir:  E -> n 
+    $ E    $ = [1;5;7m$[0m       Aceptar
+    PILA           ENTRADA                                     ACCION
+    [1;31mError:[0m  El simbolo [1;3ma[0m no es parte de la gramatica.
+    PILA     ENTRADA                      ACCION
+    $        $ < [1;5;7mn[0m < n > $    Leer n
+    $ n      $ < n < [1;5;7mn[0m > $    Leer n
+    $ n n    $ < n < n > [1;5;7m$[0m    Reducir:  E -> n 
+    $ n E    $ < n > [1;5;7m$[0m        Rechazar. No se puede reducir n E 
+    PILA ENTRADA            ACCION
+    $    $ = [1;5;7m$[0m  Rechazar. No se puede reducir ()
     Hasta luego!
   """
   OG = OperatorGrammar()
@@ -1150,6 +1163,12 @@ def main(input = input):
 
 
 if __name__ == "__main__":
-  import doctest
-  doctest.testmod(verbose=False)
-  main()
+  from sys import argv
+
+  if (len(argv) == 2) and (argv[1] == "--test"):
+    import doctest
+    doctest.testmod(verbose=False)
+  elif len(argv) == 1:
+    main()
+  else:
+    raise Exception(f'Argumentos {argv[1:]} invalidos.')

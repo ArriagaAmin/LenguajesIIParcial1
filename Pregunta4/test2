@@ -1,0 +1,27 @@
+PREC t < t 
+PREC t = c 
+PREC t < i 
+PREC c < t
+PREC c = f 
+PREC c > c
+PREC c < ; 
+PREC c < i 
+PREC c > $ 
+PREC f < t 
+PREC f > ; 
+PREC f < i 
+PREC f > $ 
+PREC ; < t 
+PREC ; > ; 
+PREC ; < i 
+PREC ; > $
+PREC i > c 
+PREC i > f 
+PREC i > ; 
+PREC i > $ 
+PREC $ < t 
+PREC $ < ; 
+PREC $ < i
+INIT S
+BUILD 
+SALIR
