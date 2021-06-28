@@ -799,13 +799,17 @@ class OperatorGrammar:
 
     # Verificamos que todos los simbolos son terminales y comparables con el simbolo anterior.
     for i in range(1, len(w)):
+      if w[i] == '$' and i < len(w)-1:
+        raise Exception(
+          f'El simbolo \033[1;3m{w[i]}\033[0m no es parte de la gramatica.'
+        )
       if not w[i] in self.Sigma:
         if not w[i] in self.N:
           raise Exception(
-            f'El simbolo \033[1;3m{w[0]}\033[0m no es parte de la gramatica.'
+            f'El simbolo \033[1;3m{w[i]}\033[0m no es parte de la gramatica.'
           )
         raise Exception(
-          f'El simbolo \033[1;3m{w[0]}\033[0m es no-terminal.'
+          f'El simbolo \033[1;3m{w[i]}\033[0m es no-terminal.'
         )
 
       if not (w[i-1] in self.precedences and w[i] in self.precedences[w[i-1]]):
@@ -852,28 +856,28 @@ class OperatorGrammar:
 
       >>> OG.parse("i+i+i*i")
       PILA               ENTRADA                                       ACCION
-      $                  $ < [1;5;7mi[0m > + < i > + < i > * < i > $         Leer i
-      $ i                $ < i > [1;5;7m+[0m < i > + < i > * < i > $         Reducir:  E -> i 
-      $ E                $ < [1;5;7m+[0m < i > + < i > * < i > $             Leer +
-      $ E +              $ < + < [1;5;7mi[0m > + < i > * < i > $             Leer i
-      $ E + i            $ < + < i > [1;5;7m+[0m < i > * < i > $             Reducir:  E -> i 
-      $ E + E            $ < + = [1;5;7m+[0m < i > * < i > $                 Leer +
-      $ E + E +          $ < + = + < [1;5;7mi[0m > * < i > $                 Leer i
-      $ E + E + i        $ < + = + < i > [1;5;7m*[0m < i > $                 Reducir:  E -> i 
-      $ E + E + E        $ < + = + < [1;5;7m*[0m < i > $                     Leer *
-      $ E + E + E *      $ < + = + < * < [1;5;7mi[0m > $                     Leer i
-      $ E + E + E * i    $ < + = + < * < i > [1;5;7m$[0m                     Reducir:  E -> i 
-      $ E + E + E * E    $ < + = + < * > [1;5;7m$[0m                         Reducir:  E -> E * E 
-      $ E + E + E        $ < + = + > [1;5;7m$[0m                             Reducir:  E -> E + E + E 
-      $ E                $ = $                                                 Reducir:  S -> E 
-      $ S                $ = $                                                 [1;3;36mACEPTAR[0m
+      $                  $ < [1;5;7mi[0m > + < i > + < i > * < i > $             Leer i
+      $ i                $ < i > [1;5;7m+[0m < i > + < i > * < i > $             Reducir:  E -> i 
+      $ E                $ < [1;5;7m+[0m < i > + < i > * < i > $                 Leer +
+      $ E +              $ < + < [1;5;7mi[0m > + < i > * < i > $                 Leer i
+      $ E + i            $ < + < i > [1;5;7m+[0m < i > * < i > $                 Reducir:  E -> i 
+      $ E + E            $ < + = [1;5;7m+[0m < i > * < i > $                     Leer +
+      $ E + E +          $ < + = + < [1;5;7mi[0m > * < i > $                     Leer i
+      $ E + E + i        $ < + = + < i > [1;5;7m*[0m < i > $                     Reducir:  E -> i 
+      $ E + E + E        $ < + = + < [1;5;7m*[0m < i > $                         Leer *
+      $ E + E + E *      $ < + = + < * < [1;5;7mi[0m > $                         Leer i
+      $ E + E + E * i    $ < + = + < * < i > [1;5;7m$[0m                         Reducir:  E -> i 
+      $ E + E + E * E    $ < + = + < * > [1;5;7m$[0m                             Reducir:  E -> E * E 
+      $ E + E + E        $ < + = + > [1;5;7m$[0m                                 Reducir:  E -> E + E + E 
+      $ E                $ = $                                                     Reducir:  S -> E 
+      $ S                $ = $                                                     [1;3;36mACEPTAR[0m
 
       >>> OG.parse("i**i")
       PILA         ENTRADA                        ACCION
-      $            $ < [1;5;7mi[0m > * > * < i > $      Leer i
-      $ i          $ < i > [1;5;7m*[0m > * < i > $      Reducir:  E -> i 
-      $ E          $ < [1;5;7m*[0m > * < i > $          Leer *
-      $ E *        $ < * > [1;5;7m*[0m < i > $          [1;3;31mRECHAZAR[0m. No se puede reducir E * 
+      $            $ < [1;5;7mi[0m > * > * < i > $          Leer i
+      $ i          $ < i > [1;5;7m*[0m > * < i > $          Reducir:  E -> i 
+      $ E          $ < [1;5;7m*[0m > * < i > $              Leer *
+      $ E *        $ < * > [1;5;7m*[0m < i > $              [1;3;31mRECHAZAR[0m. No se puede reducir E * 
 
       >>> OG.parse("")
       Traceback (most recent call last):
@@ -1179,10 +1183,10 @@ def main(input = input):
     $      $ < [1;5;7mn[0m > $       Leer n
     $ n    $ < n > [1;5;7m$[0m       Reducir:  E -> n 
     $ E    $ = [1;5;7m$[0m           [1;3;36mACEPTAR[0m
-    [1;31mError:[0m  El simbolo [1;3m$[0m no es parte de la gramatica.
-    [1;31mError:[0m  El simbolo [1;3m$[0m no es parte de la gramatica.
+    [1;31mError:[0m  El simbolo [1;3ma[0m no es parte de la gramatica.
+    [1;31mError:[0m  El simbolo [1;3mc[0m no es parte de la gramatica.
     [1;31mError:[0m  No existe una relacion de precedencia entre los simbolos [1;3mn[0m y [1;3mn[0m.
-    [1;31mError:[0m  El simbolo [1;3m$[0m es no-terminal.
+    [1;31mError:[0m  El simbolo [1;3mE[0m es no-terminal.
     [1;31mError:[0m  No existe una relacion de precedencia entre los simbolos [1;3m$[0m y [1;3m$[0m.
     Hasta luego!
   """
