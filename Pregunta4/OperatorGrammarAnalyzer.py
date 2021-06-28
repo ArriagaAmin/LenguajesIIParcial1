@@ -276,7 +276,7 @@ class OperatorGrammar:
       )
 
     # Verificamos si la regla es una lambda-produccion
-    if (len(tokens) == 0) and (self.S != None):
+    if (len(tokens) == 0) and (self.S != None) and (self.S != no_terminal):
       raise Exception(
         f'Esta regla es una lambda-produccion y la gramatica ya tiene un simbolo ' + \
         'inicial. \nRecuerde que una \033[3mGramatica de Operadores\033[0m no debe ' + \
