@@ -1,6 +1,7 @@
 PREC t < t 
 PREC t = c 
-PREC t < i 
+PREC t < i
+PREC t < ; 
 PREC c < t
 PREC c > c
 PREC c = f 
@@ -30,5 +31,6 @@ RULE I t I c I f I
 RULE I t I c I 
 RULE I I ; I 
 RULE I i 
-BUILD 
+BUILD
+PARSE t i ; i c i 
 SALIR

@@ -1,8 +1,8 @@
 # Fdb version 3
-["pdflatex"] 1624966663 "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.tex" "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.pdf" "parcial" 1624966664
+["pdflatex"] 1624994941 "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.tex" "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.pdf" "parcial" 1624994942
   "/etc/texmf/web2c/texmf.cnf" 1613085870 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.aux" 1624966664 680 2ac1dd7800f926b0b596f03abe33f316 ""
-  "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.tex" 1624966662 18857 74eb5bf675b8f6222ece025c951f0413 ""
+  "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.aux" 1624994941 680 2ac1dd7800f926b0b596f03abe33f316 ""
+  "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.tex" 1624994939 18885 548196d9d16e551fa4e8b0397d8c6255 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/bookman/pbkd7t.tfm" 1480098688 1828 e7f8907b15e46b672fb146aef572259e ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/bookman/pbkd8r.tfm" 1480098688 2652 fbb260af94169655e2163df863ca2995 ""
@@ -70,13 +70,13 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1551493644 34566 ab5be96bde1a5acfd4f881dbe566b5fb ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1613085917 125883 5a8e8cee8831b673b8567a1d9242290b ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1613085923 795362 3d42f79942c732a88883bcee66f31b35 ""
-  "parcial.aux" 1624966664 680 2ac1dd7800f926b0b596f03abe33f316 ""
-  "parcial.out" 1624966663 0 d41d8cd98f00b204e9800998ecf8427e ""
-  "parcial.tex" 1624966662 18857 74eb5bf675b8f6222ece025c951f0413 ""
+  "parcial.aux" 1624994941 680 2ac1dd7800f926b0b596f03abe33f316 ""
+  "parcial.out" 1624994941 0 d41d8cd98f00b204e9800998ecf8427e ""
+  "parcial.tex" 1624994939 18885 548196d9d16e551fa4e8b0397d8c6255 ""
   (generated)
-  "parcial.aux"
-  "parcial.pdf"
-  "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.log"
-  "parcial.log"
   "parcial.out"
+  "parcial.pdf"
+  "parcial.log"
+  "parcial.aux"
   "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.pdf"
+  "/home/amin/Desktop/LenguajesII/LenguajesIIParcial1/L_parcial/parcial.log"

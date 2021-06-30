@@ -99,7 +99,7 @@
                 \begin{tabular}{ | c | c | c | c | c | c | c |}
                     \hline
                     & \verb|try| & \verb|catch| & \verb|finally| & \verb|;| & \verb|instr| & \verb|$| \\ \hline
-                    \verb|try| & $<$ & $=$ & & & $<$ & \\ \hline
+                    \verb|try| & $<$ & $=$ & & $<$ & $<$ & \\ \hline
                     \verb|catch| & $<$ & $>$ & $=$ & $<$ & $<$ & $>$ \\ \hline 
                     \verb|finally| & $<$ & $>$ & $>$ & $>$ & $<$ & $>$ \\ \hline 
                     \verb|;| & $<$ & & & $>$ & $<$ & $>$ \\ \hline 
@@ -277,7 +277,7 @@
                     $\{F_{finally}\}$               &  $\Longrightarrow$  & $\{ \{F_{try}, G_{catch}\},  \{G_{\$}\}, \{F_{catch}, G_{finally}\}, \{G_{;}\}\}$ \\
     
                     & & \\ \hline
-                    $\{G_{;}\}$                     &  $\Longrightarrow$  & $\{ \{F_{catch}, G_{finally}\}, \{F_\$ \} \}$ \\
+                    $\{G_{;}\}$                     &  $\Longrightarrow$  & $\{ \{F_{try}, G_{catch}\}, \{F_{catch}, G_{finally}\}, \{F_\$ \} \}$ \\
     
                     & & \\ \hline
                     $\{F_{catch}, G_{finally}\}$    &  $\Longrightarrow$  & $\{ \{F_{try}, G_{catch}\}, \{G_{\$}\} \}$ \\
